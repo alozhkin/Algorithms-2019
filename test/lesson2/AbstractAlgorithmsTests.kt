@@ -1,8 +1,11 @@
 package lesson2
 
+import util.PerfResult
+import util.estimate
 import java.io.BufferedWriter
 import java.io.File
 import java.util.*
+import kotlin.system.measureNanoTime
 import kotlin.test.assertEquals
 
 abstract class AbstractAlgorithmsTests {
@@ -42,10 +45,25 @@ abstract class AbstractAlgorithmsTests {
         return minIndex + 1 to maxIndex + 1
     }
 
+    private fun testGeneratedPrices(totalSize: Int): PerfResult<Unit> {
+        try {
+            val expectedAnswer = generatePrices(totalSize)
+            var actualAnswer = -1 to -1
+            val time = measureNanoTime { actualAnswer = JavaAlgorithms.optimizeBuyAndSell("temp_prices.txt") }
+            assertEquals(expectedAnswer, actualAnswer)
+            return PerfResult(size = totalSize, data = Unit, time = time)
+        } finally {
+            File("temp_prices.txt").delete()
+        }
+    }
+
     fun optimizeBuyAndSell(optimizeBuyAndSell: (String) -> Pair<Int, Int>) {
+        assertEquals(1 to 2, optimizeBuyAndSell("input/my_buysell3.txt"))
+        assertEquals(1 to 1, optimizeBuyAndSell("input/my_buysell2.txt"))
         assertEquals(3 to 4, optimizeBuyAndSell("input/buysell_in1.txt"))
         assertEquals(8 to 12, optimizeBuyAndSell("input/buysell_in2.txt"))
         assertEquals(3 to 4, optimizeBuyAndSell("input/buysell_in3.txt"))
+        assertEquals(1 to 2, optimizeBuyAndSell("input/my_test_buysell.txt"))
         try {
             val expectedAnswer = generatePrices(1000)
             assertEquals(expectedAnswer, optimizeBuyAndSell("temp_prices.txt"))
@@ -58,12 +76,16 @@ abstract class AbstractAlgorithmsTests {
         } finally {
             File("temp_prices.txt").delete()
         }
+
+        val perf = estimate(listOf(1_000, 10_000, 100_000, 1_000_000, 10_000_000)) {
+            testGeneratedPrices(it)
+        }
+        println("sortSequence: $perf")
     }
 
     fun josephTask(josephTask: (Int, Int) -> Int) {
         assertEquals(1, josephTask(1, 1))
         assertEquals(2, josephTask(2, 1))
-        assertEquals(50000000, josephTask(50000000, 1))
         assertEquals(3, josephTask(8, 5))
         assertEquals(28, josephTask(40, 3))
         var menNumber = 2
@@ -71,10 +93,23 @@ abstract class AbstractAlgorithmsTests {
             assertEquals(1, josephTask(menNumber, 2))
             menNumber *= 2
         }
+        assertEquals(50_000_000, josephTask(50_000_000, 1))
+        assertEquals(4_580, josephTask(50_000, 49_999))
+        assertEquals(4_682, josephTask(50_000, 45))
+        assertEquals(8372, josephTask(50_000, 12))
     }
 
     fun longestCommonSubstring(longestCommonSubstring: (String, String) -> String) {
+        assertEquals(" ", longestCommonSubstring("  qwerty", "uio p[] asdf ghjk zxcv bnm"))
+        assertEquals("", longestCommonSubstring("ea", ""))
+        assertEquals("a", longestCommonSubstring("a", "a"))
+        assertEquals("a", longestCommonSubstring("awww", "adrrr"))
+        assertEquals("a", longestCommonSubstring("wwwa", "adrrr"))
+        assertEquals("a", longestCommonSubstring("wwwa", "drrra"))
+        assertEquals("a", longestCommonSubstring("awww", "drrra"))
+        assertEquals("123456789", longestCommonSubstring("23212312345678902314442", "9hfg123456789hfg"))
         assertEquals("", longestCommonSubstring("мой мир", "я"))
+        assertEquals("", longestCommonSubstring("AAAA", "a"))
         assertEquals("зд", longestCommonSubstring("здравствуй мир", "мы здесь"))
         assertEquals("СЕРВАТОР", longestCommonSubstring("ОБСЕРВАТОРИЯ", "КОНСЕРВАТОРЫ"))
         assertEquals(
@@ -147,6 +182,65 @@ abstract class AbstractAlgorithmsTests {
     }
 
     fun baldaSearcher(baldaSearcher: (String, Set<String>) -> Set<String>) {
+        //outOfMemory из-за watcher. Без него будет считать пару сотен лет, так что без него нельзя.
+//        assertEquals(
+//            setOf(),
+//            baldaSearcher(
+//                "input/my_balda5.txt", setOf(
+//                    "abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" +
+//                            "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba"
+//                )
+//            )
+//        )
+        assertEquals(
+            setOf(),
+            baldaSearcher("input/my_balda4.txt", setOf("abbbbbbbbbbbbbba"))
+        )
+        assertEquals(
+            setOf("bbab"),
+            baldaSearcher("input/my_balda4.txt", setOf("bbab"))
+        )
+        assertEquals(
+            setOf("babbbbb"),
+            baldaSearcher("input/my_balda4.txt", setOf("babbbbb"))
+        )
+        assertEquals(
+            setOf(),
+            baldaSearcher(
+                "input/my_balda.txt", setOf(
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
+                            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
+                            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
+                            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
+                            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
+                            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
+                            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
+                            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
+                            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
+                            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                )
+            )
+        )
+        assertEquals(
+            setOf(),
+            baldaSearcher("input/my_balda2.txt", setOf("ababt"))
+        )
+        assertEquals(
+            setOf(),
+            baldaSearcher("input/my_balda2.txt", setOf("abababababababababababaa"))
+        )
+        assertEquals(
+            setOf("aaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+            baldaSearcher("input/my_balda.txt", setOf("aaaaaaaaaaaaaaaaaaaaaaaaaaa"))
+        )
+        assertEquals(
+            setOf(),
+            baldaSearcher("input/my_balda.txt", setOf("aaaaaaaab"))
+        )
+        assertEquals(
+            setOf("kotlinpolytech"),
+            baldaSearcher("input/my_balda3.txt", setOf("kotlinpolytech"))
+        )
         assertEquals(
             setOf("ТРАВА", "КРАН", "АКВА", "НАРТЫ"),
             baldaSearcher("input/balda_in1.txt", setOf("ТРАВА", "КРАН", "АКВА", "НАРТЫ", "РАК"))
@@ -168,6 +262,40 @@ abstract class AbstractAlgorithmsTests {
                     "ПРОСТРАНСТВО", "ДИАЛЕКТИКА", "КВАЛИФИКАЦИЯ", "ПОМЕХОУСТОЙЧИВОСТЬ", "КОГЕРЕНТНОСТЬ",
                     "АППРОКСИМАЦИЯ", "ИНТЕРПОЛЯЦИЯ", "МАЙЕВТИКА", "ШРЕДИНГЕР", "ЭЙНШТЕЙН"
                 )
+            )
+        )
+        assertEquals(
+            setOf(
+                "ОСТАНОВ", "РАССУДИТЕЛЬНОСТЬ", "УСТОЙ", "ОСТРОГ", "ИНАЯ", "АИ", "ФОРС", "ЛАПА", "СТО", "ГУЛЯ", "АР",
+                "РАСА", "АС", "СВАТ", "СТАВ", "АУ", "ПОЛ", "СТАЖ", "СИ", "ВОЛОС", "МИГ", "САНИ", "ЛЖА", "ТУЯ", "СТАН",
+                "СИВАЯ", "СУД", "СУ", "ПОЛИС", "РАК", "ШАР", "МИР", "ПОТ", "СВАН", "ТА", "МИМ", "СИЛЬ", "ЛИСТВИЕ",
+                "АНОНС", "СИМА", "ТО", "ПРОГРАММИРОВАНИЕ", "ШТЕЙН", "АНИС", "ИСК", "ОНА", "ГИД", "ГРАВИТАЦИЯ",
+                "МИЛОВАНИЕ", "ОТАРА", "ЯСТВИЕ", "ЕЛЬ", "ТИШЬ", "МАМОНТ", "УД", "ГИТ", "УЖ", "ЛИНО", "ПОНИ", "ИВА",
+                "СЫРТ", "ГА", "УС", "УТ", "ВЫЛЕТ", "ПОНОС", "ПАР", "ПРЯ", "АГА", "ПАЛ", "АУЛ", "ЛИС", "ФА", "РАНА",
+                "ГОРА", "ЯРД", "ФИ", "МИРОВАЯ", "БЕЛ", "ПСИ", "КТИТОР", "ПАТ", "ПРОСОС", "СОЛИСТ", "ПАС", "СОРОК",
+                "ОЛИВА", "ИГО", "ЭТИМОН", "ГАТЬ", "ОРС", "ХИ", "ХИНА", "ВИС", "СИВОСТЬ", "НОМ", "СЕЙ", "НОК", "СЕТ",
+                "ОСТЬ", "ОСА", "КВАС", "ЯТЬ", "ТЯТЯ", "ЕР", "КИТ", "ТОСТ", "СЕТЬ", "НОС", "ОРТ", "ФОКС", "ОСТ", "ПРОК",
+                "СИСТР", "ТИК", "ХОР", "СОЛИЛО", "ТИР", "ТИС", "АГАР", "ВЫРОСТ", "АГАТ", "СОРОМ", "НОРА", "МИОМА",
+                "ТОРИ", "ТВИН", "МЕРА", "ТОРН", "ЛЬЕ", "МОСТ", "МОРОК", "СИЕ", "АСТРА", "МОР", "ТИГР", "БИТ", "БИС",
+                "ТОРГ", "ЛИВАН", "ЦУГ", "ФОТОН", "МОТ", "ФОК", "ФОН", "МАЦА", "ГНУ", "ГАРТ", "НИВА", "ВЫНОС", "ФОТ",
+                "СИР", "ВЫЯ", "ШУ", "ПРОПС", "ЛОВ", "ИЛ", "ШПОН", "ТЛЯ", "ТРИАС", "ДРАГА", "ИР", "МОПС", "НРАВ",
+                "ШПРОТ", "ВИСТ", "МАГ", "ОРОК", "ЧУШЬ", "ШАРМ", "АИР", "НАСТ", "НОНА", "ГРОТ", "ЭСТ", "МАТ", "СЫН",
+                "ФРЯ", "МАР", "СЫР", "ФАТ", "РИС", "ЗОНТ", "ОСОТ", "МОРОКА", "ОСОС", "ПОРЫВ", "МАК", "СЫЧ", "СОРТ",
+                "АПЕЛЬСИН", "ВОНА", "ПРОСО", "ЭТО", "ВЫГАР", "НОМА", "ОХИ", "ВОЛ", "ТОРИТ", "МАРГО", "САГО", "ТОЙ",
+                "ГАМ", "ТАРИ", "КОН", "КОМ", "ГРАММ", "ВОР", "РОТА", "ЛИ", "ДВА", "ПОСОЛ", "ВИРА", "МРАК", "СЭР",
+                "ЧИХ", "ТИГРА", "МИСА", "РЕПА", "ТАРА", "РОСТ", "ТОМ", "ТОН", "РОСТР", "ТРОС", "ВТОРА", "ТОП", "ЛЯ",
+                "МА", "ИВАСИ", "РОПОТ", "ТОТ", "ЛОРИ", "ЧИЙ", "БЕЛЬ", "СОНЬ", "МИ", "РОСА", "АГАМИ", "ТРОГ", "ИНЕЙ",
+                "ДРОГА", "ЛАВР", "СОМ", "УТОР", "СПОР", "ЖИР", "АВИА", "ВАЛ", "ЙОТ", "АРГО", "МИРО", "ЖИТО", "ВАЖ",
+                "НИ", "ПОРОК", "УТЯ", "ОМАР", "НО", "ВАРЯГ", "ГУЛ", "ЛУГ", "ТАУ", "ЮГ", "ВАШ", "ЛУБ", "СПОРОК", "ХОРТ",
+                "ЮЗ", "ЛОНО", "ЖИРО", "КОРМ", "ВАР", "ПОСТ", "СОН", "СОЛО", "УСТОЙЧИВОСТЬ", "СОР", "ЮС", "ЮТ", "СОТ",
+                "СИЛОН", "ВОИН", "ПОМОСТ", "АНТ", "РИГА", "СИЛОС", "ПРОТОН", "СОЛЬ", "ОМ", "ПРИВАР", "КСИ", "ОН",
+                "ЛИСА", "МЕХ", "РАЦИЯ", "ИГРА", "ОХ", "ФОТО", "ТОВАР", "АРАТ", "МОККО", "ЯЛ", "ДРАТВА", "ПА", "ЯР",
+                "РОМ", "ЯС", "РОЛ", "ИТОГ", "ЛИСТ", "РОК", "РАТЬ", "ПЕ", "ИОН", "КОРА", "РОГ", "РОВ", "ОСТРОГА", "САП",
+                "ТУК", "ОСИЛ", "ЛИСТВА", "СРОК", "РОТ", "ГИТАРА", "ЭТОТ", "РЕ", "РОТИК", "КУТ", "НАВИС", "ПРИТОН",
+                "ИМАМ", "ОСТИТ", "САН", "РО"
+            ),
+            baldaSearcher(
+                "input/balda_in3.txt", File("input/all_nouns.txt").readLines().toSet()
             )
         )
     }
