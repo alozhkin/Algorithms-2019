@@ -346,7 +346,7 @@ abstract class AbstractTaskTests : AbstractFileTests() {
                 //JavaFileTests.assertFilesByLines("temp.txt", "temp_sequence_expected.txt")
 
                 //fast, but uninformative
-                assertTrue(JavaFileTests.compareFilesByBytes("temp.txt", "temp_sequence_expected.txt"));
+                assertTrue(JavaFileTests.compareFilesByBytes("temp.txt", "temp_sequence_expected.txt"))
 
                 return res.copy(time = time)
             } finally {
@@ -361,7 +361,7 @@ abstract class AbstractTaskTests : AbstractFileTests() {
         }
         println("sortSequence: $perf")
 
-//        testGeneratedPrices(100_000_000, 100_000_000 / MOST_FREQUENT_ELEM_INVERSE_RATIO)
+//        testGeneratedSequence(100_000_000, 100_000_000 / MOST_FREQUENT_ELEM_INVERSE_RATIO)
     }
 
     private fun generateArrays(

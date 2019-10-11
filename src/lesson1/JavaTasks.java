@@ -4,7 +4,6 @@ import kotlin.NotImplementedError;
 
 import java.io.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 public class JavaTasks {
@@ -103,17 +102,17 @@ public class JavaTasks {
      * 121.3
      */
     public static void sortTemperatures(String inputName, String outputName) {
-        Map<Integer, Integer> tempsCount = parseTemp(inputName);
+        int[] tempsCount = parseTemp(inputName);
         writeInFileTemps(tempsCount, outputName);
     }
 
-    private static Map<Integer, Integer> parseTemp(String inputName) {
-        String y = "tttttttt";
-        String u = "tttttttt";
+    private static int[] parseTemp(String inputName) {
 
         Stopwatch.start();
 
-        Map<Integer, Integer> tempsCount = new HashMap<>();
+        int negativeIntervalSize = 2730;
+
+        int[] tempsCount = new int[2730 + 5000 + 1];
 
         try (BufferedInputStream input = new BufferedInputStream(new FileInputStream(new File(inputName)))) {
             int sym = input.read();
@@ -134,9 +133,9 @@ public class JavaTasks {
                 sym = input.read();
 
                 if (isPositive) {
-                    tempsCount.merge(num, 1, Integer::sum);
+                    tempsCount[num + negativeIntervalSize] += 1;
                 } else {
-                    tempsCount.merge(-num, 1, Integer::sum);
+                    tempsCount[negativeIntervalSize - num] += 1;
                 }
 
             }
@@ -149,14 +148,22 @@ public class JavaTasks {
         return tempsCount;
     }
 
-    private static void writeInFileTemps(Map<Integer, Integer> temps, String outputName) {
+    private static void writeInFileTemps(int[] temps, String outputName) {
         Stopwatch.start();
 
+        int negativeIntervalSize = 2730;
+
         try (BufferedWriter wr = new BufferedWriter(new FileWriter(outputName))) {
-            for (Integer key: temps.keySet().stream().sorted().collect(Collectors.toList())) {
-                for (int i = 0; i < temps.get(key); i++) {
-                    if (key < 0) wr.write("-");
-                    wr.write(Math.abs(key) / 10 + "." + Math.abs(key) % 10 + System.lineSeparator());
+            for (int i = 0; i < temps.length; i++) {
+                for (int j = 0; j < temps[i]; j++) {
+                    int num;
+                    if (i < negativeIntervalSize) {
+                        wr.write("-");
+                        num = negativeIntervalSize - i;
+                    } else {
+                        num = i - negativeIntervalSize;
+                    }
+                    wr.write(num / 10 + "." + num % 10 + System.lineSeparator());
                 }
             }
         } catch (IOException e) {
@@ -168,8 +175,8 @@ public class JavaTasks {
 
     /*
     Потребление памяти зависит от размера буферов в BufferedInputStream и BufferWriter (b), а так же от размера
-    интервала температур (t), как O(b + t). Для каждой строки в файле выполняется считывание, поиск в hashmap,
-    который занимает в среднем O(1), запись в файл, что в итоге даёт O(n) сложность.
+    интервала температур (t), как O(b + t). Для каждой строки в файле выполняется считывание, изменение элем в массиве,
+    которое занимает O(1), запись в файл, что в итоге даёт O(n) сложность.
      */
     /**
      * Сортировка последовательности
@@ -202,9 +209,8 @@ public class JavaTasks {
      */
     public static void sortSequence(String inputName, String outputName) {
         Integer[] sequence = parseIntLines(inputName);
-        Integer num = findMostFrequent(sequence);
-        moveElem(sequence, num);
-        writeInFileSeq(sequence, outputName);
+        Integer[] res = findMostFrequent(sequence);
+        writeInFileSeq(sequence, res[0], res[1], outputName);
     }
 
     public static Integer[] parseIntLines(String inputName) {
@@ -227,7 +233,7 @@ public class JavaTasks {
         return sequence.toArray(new Integer[0]);
     }
 
-    private static Integer findMostFrequent(Integer[] sequence) {
+    private static Integer[] findMostFrequent(Integer[] sequence) {
         Stopwatch.start();
 
         Map<Integer, Integer> integerCount = new HashMap<>();
@@ -248,37 +254,18 @@ public class JavaTasks {
 
         Stopwatch.stop("findMostFrequent");
 
-        return res;
+        return new Integer[] {res, resCount};
     }
 
-    private static void moveElem(Integer[] sequence, Integer num) {
-        Stopwatch.start();
-        mergeSort0(sequence, num, 0, sequence.length);
-        Stopwatch.stop("moveElem");
-    }
-
-    private static void mergeSort0(Integer[] array, Integer num, int l, int r) {
-        if (l >= r - 1) return;
-        int m = (l + r) >>> 1;
-        mergeSort0(array, num, l, m);
-        mergeSort0(array, num, m, r);
-        merge(array, num, l, m, r);
-    }
-
-    private static void merge(Integer[] array, Integer num, int l, int m, int r) {
-        int i = l;
-        int j = m;
-        while (!array[i].equals(num) && i < m) i++;
-        while (j < r) array[i++] = array[j++];
-        while (i < r) array[i++] = num;
-    }
-
-    private static void writeInFileSeq(Integer[] sequence, String outputName) {
+    private static void writeInFileSeq(Integer[] sequence, Integer num, Integer frequency, String outputName) {
         Stopwatch.start();
 
         try (BufferedWriter wr = new BufferedWriter(new FileWriter(outputName, true))) {
             for (Integer el: sequence) {
-                wr.write(el + "\n");
+                if (!el.equals(num)) wr.write(el + "\n");
+            }
+            for (int i = 0; i < frequency; i++) {
+                wr.write(num + "\n");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -291,8 +278,7 @@ public class JavaTasks {
     Потребление памяти зависит от числового интервала (для каждого числа придётся создавать объект Integer),
     от количества чисел в последовательности (придётся хранить указатели на объекты в массиве), общая память
     O(interval + n).
-    Асимпотическая сложность: парсит за O(n), находит самый встречающийся за O(n), при сдвиге элементов по сути
-    происходит mergesort, которая требует O(n * lgn), сложность: O(n * lgn)
+    Асимпотическая сложность: парсит за O(n), находит самый встречающийся за O(n), печатает за O(n), сложность O(n)
      */
     /**
      * Соединить два отсортированных массива в один

@@ -41,4 +41,22 @@ class JavaHeadSetTest : AbstractHeadTailTest() {
         doSubSetTest()
         doSubSetRelationTest()
     }
+
+    @Test
+    @Tag("Impossible")
+    fun subRemoveTest() {
+        doSubRemoveTest()
+    }
+
+    @Test
+    @Tag("Impossible")
+    fun subIteratorTest() {
+        doSubIteratorTest()
+    }
+
+    @Test
+    @Tag("Impossible")
+    fun subIteratorRemoveTest() {
+        doSubIteratorRemoveTest()
+    }
 }
