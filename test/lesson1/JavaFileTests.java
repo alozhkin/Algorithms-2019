@@ -29,7 +29,6 @@ public class JavaFileTests {
         Stopwatch.stop("assertFilesByLines");
     }
 
-    //todo разобраться как это устроено
     public static boolean compareFilesByBytes(String file1Name, String file2Name) {
         Stopwatch.start();
 
