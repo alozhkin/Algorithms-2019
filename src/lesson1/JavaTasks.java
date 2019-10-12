@@ -101,7 +101,7 @@ public class JavaTasks {
      * 99.5
      * 121.3
      */
-    public static void sortTemperatures0(String inputName, String outputName) throws IOException {
+    public static void sortTemperatures(String inputName, String outputName) throws IOException {
         int[] tempsCount = parseTemp(inputName);
         writeInFileTemps(tempsCount, outputName);
     }
