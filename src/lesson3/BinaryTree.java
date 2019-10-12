@@ -5,13 +5,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-/*
-todo в итераторе concurrent modification exception
-todo написать задачу Иосифа с помощью BitSet
-todo написать оценку
- */
-
-
 // Attention: comparable supported but comparator is not
 public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implements CheckableSortedSet<T> {
 
@@ -70,6 +63,8 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
 
     protected int size = 0;
 
+    private int modCount = 0;
+
     @Override
     public boolean add(T t) {
         if (t == null) throw new NullPointerException();
@@ -93,6 +88,7 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
             newNode.parent = closest;
         }
         size++;
+        modCount++;
         return true;
     }
 
@@ -141,6 +137,7 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
             y.left.parent = y;
         }
         size--;
+        modCount++;
         return true;
     }
     /*
@@ -274,11 +271,13 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
     }
     public class BinaryTreeIterator implements Iterator<T> {
 
-        private Node<T> current = findNext(null);
+        private Node<T> current;
         private Node<T> prev = null;
+        private int expectedModCount;
 
         private BinaryTreeIterator() {
-            // Добавьте сюда инициализацию, если она необходима
+            current = findNext(null);
+            expectedModCount = modCount;
         }
 
         /**
@@ -300,6 +299,7 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
          */
         @Override
         public T next() {
+            if (modCount != expectedModCount) throw new ConcurrentModificationException();
             prev = current;
             current = findNext(current);
             if (prev == null) throw new NoSuchElementException();
@@ -316,8 +316,11 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
          */
         @Override
         public void remove() {
-            if (prev == null) throw new IllegalArgumentException();
+            if (modCount != expectedModCount) throw new ConcurrentModificationException();
+            if (prev == null) throw new IllegalStateException();
             BinaryTree.this.remove(prev.value);
+            expectedModCount = modCount;
+            prev = null;
         }
         /*
         Память: O(1)
@@ -354,6 +357,9 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
         subSet = new SubSet(this, false, fromElement, true, false, toElement, false);
         return subSet;
     }
+    /*
+    subSet, так же как и headSet и tailSet создаются за O(1) и занимают O(1)
+     */
 
     /**
      * Найти множество всех элементов меньше заданного
@@ -422,26 +428,6 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
         @Override
         public Iterator<T> iterator() {
             return new SubSetIterator();
-        }
-
-        final boolean tooLow(T key) {
-            if (!fromStart) {
-                int c = key.compareTo(lo);
-                return c < 0 || (c == 0 && !loInclusive);
-            }
-            return false;
-        }
-
-        final boolean tooHigh(T key) {
-            if (!toEnd) {
-                int c = key.compareTo(hi);
-                return c > 0 || (c == 0 && !hiInclusive);
-            }
-            return false;
-        }
-
-        final boolean inRange(T key) {
-            return !tooLow(key) && !tooHigh(key);
         }
 
         @Override
@@ -515,10 +501,31 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
             }
         }
 
+        private boolean tooLow(T key) {
+            if (!fromStart) {
+                int c = key.compareTo(lo);
+                return c < 0 || (c == 0 && !loInclusive);
+            }
+            return false;
+        }
+
+        private boolean tooHigh(T key) {
+            if (!toEnd) {
+                int c = key.compareTo(hi);
+                return c > 0 || (c == 0 && !hiInclusive);
+            }
+            return false;
+        }
+
+        private boolean inRange(T key) {
+            return !tooLow(key) && !tooHigh(key);
+        }
+
         private class SubSetIterator extends BinaryTreeIterator {
             private Node<T> last;
             private Node<T> current;
             private Node<T> prev = null;
+            private int expectedModCount;
 
             private SubSetIterator() {
                 Node<T> first = findFirst();
@@ -528,6 +535,7 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
                     last = findLast();
                 }
                 current = first;
+                expectedModCount = parent.modCount;
             }
 
             @Override
@@ -537,6 +545,7 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
 
             @Override
             public T next() {
+                if (parent.modCount != expectedModCount) throw new ConcurrentModificationException();
                 if (prev != null && prev.equals(last)) {
                     throw new NoSuchElementException();
                 }
@@ -548,8 +557,11 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
 
             @Override
             public void remove() {
-                if (prev == null) throw new IllegalArgumentException();
+                if (parent.modCount != expectedModCount) throw new ConcurrentModificationException();
+                if (prev == null) throw new IllegalStateException();
                 BinaryTree.this.remove(prev.value);
+                prev = null;
+                expectedModCount = parent.modCount;
             }
         }
     }

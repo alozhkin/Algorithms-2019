@@ -4,6 +4,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.SortedSet;
 
@@ -130,5 +132,66 @@ public class BinaryTreeJavaTest {
         Assert.assertEquals(2, headSet.size());
         Assert.assertEquals(Integer.valueOf(4), headSet.first());
         Assert.assertEquals(Integer.valueOf(5), headSet.last());
+    }
+
+    @Test
+    public void iteratorTest() {
+        BinaryTree<Integer> tree = new BinaryTree<>();
+        SortedSet<Integer> subSet = tree.subSet(1, 3);
+        SortedSet<Integer> headSet = tree.headSet(3);
+        SortedSet<Integer> tailSet = tree.tailSet(2);
+        iteratorCheck(tree, subSet);
+        iteratorCheck(tree, headSet);
+        iteratorCheck(tree, tailSet);
+    }
+
+    private void iteratorCheck(BinaryTree<Integer> tree, SortedSet<Integer> subSet) {
+        tree.add(8);
+        tree.add(7);
+        tree.add(6);
+
+        Iterator it = tree.iterator();
+        tree.add(3);
+        Assertions.assertThrows(ConcurrentModificationException.class, it::next);
+
+        it = tree.iterator();
+        tree.remove(3);
+        Assertions.assertThrows(ConcurrentModificationException.class, it::next);
+        Assertions.assertDoesNotThrow(it::hasNext);
+
+        it = tree.iterator();
+        it.next();
+        Assertions.assertDoesNotThrow(it::remove);
+        it.next();
+        it.next();
+        Assertions.assertThrows(NoSuchElementException.class, it::next);
+
+        it = tree.iterator();
+        it.next();
+        it.remove();
+        Assertions.assertThrows(IllegalStateException.class, it::remove);
+        it.next();
+        it.remove();
+
+        tree.add(1);
+        tree.add(2);
+        tree.add(3);
+
+        it = tree.iterator();
+        Iterator subSetIt = subSet.iterator();
+        it.next();
+        subSetIt.next();
+        it.remove();
+        Assertions.assertThrows(ConcurrentModificationException.class, subSetIt::next);
+        Assert.assertFalse(subSet.contains(1));
+        subSetIt = subSet.iterator();
+        subSetIt.next();
+        subSetIt.remove();
+        Assertions.assertThrows(ConcurrentModificationException.class, it::next);
+        Assert.assertFalse(tree.contains(2));
+        it = tree.iterator();
+        it.next();
+        it.remove();
+        Assert.assertEquals(0, subSet.size());
     }
 }

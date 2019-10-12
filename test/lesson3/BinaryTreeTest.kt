@@ -84,11 +84,6 @@ class BinaryTreeTest {
         }
     }
 
-    @Test
-    @Tag("Normal")
-    fun testRemoveKotlin() {
-        testRemove { createKotlinTree() }
-    }
 
     @Test
     @Tag("Normal")
@@ -129,11 +124,6 @@ class BinaryTreeTest {
         }
     }
 
-    @Test
-    @Tag("Normal")
-    fun testIteratorKotlin() {
-        testIterator { createKotlinTree() }
-    }
 
     @Test
     @Tag("Normal")
@@ -186,11 +176,6 @@ class BinaryTreeTest {
         }
     }
 
-    @Test
-    @Tag("Hard")
-    fun testIteratorRemoveKotlin() {
-        testIteratorRemove { createKotlinTree() }
-    }
 
     @Test
     @Tag("Hard")
