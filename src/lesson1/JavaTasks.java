@@ -101,12 +101,12 @@ public class JavaTasks {
      * 99.5
      * 121.3
      */
-    public static void sortTemperatures(String inputName, String outputName) {
+    public static void sortTemperatures0(String inputName, String outputName) throws IOException {
         int[] tempsCount = parseTemp(inputName);
         writeInFileTemps(tempsCount, outputName);
     }
 
-    private static int[] parseTemp(String inputName) {
+    private static int[] parseTemp(String inputName) throws IOException {
 
         Stopwatch.start();
 
@@ -139,8 +139,6 @@ public class JavaTasks {
                 }
 
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
         Stopwatch.stop("parseTemp");
@@ -148,7 +146,7 @@ public class JavaTasks {
         return tempsCount;
     }
 
-    private static void writeInFileTemps(int[] temps, String outputName) {
+    private static void writeInFileTemps(int[] temps, String outputName) throws IOException {
         Stopwatch.start();
 
         int negativeIntervalSize = 2730;
@@ -166,8 +164,6 @@ public class JavaTasks {
                     wr.write(num / 10 + "." + num % 10 + System.lineSeparator());
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
         Stopwatch.stop("writeInFileTemps");
@@ -207,13 +203,13 @@ public class JavaTasks {
      * 2
      * 2
      */
-    public static void sortSequence(String inputName, String outputName) {
+    public static void sortSequence(String inputName, String outputName) throws IOException {
         Integer[] sequence = parseIntLines(inputName);
         Integer[] res = findMostFrequent(sequence);
         writeInFileSeq(sequence, res[0], res[1], outputName);
     }
 
-    public static Integer[] parseIntLines(String inputName) {
+    public static Integer[] parseIntLines(String inputName) throws IOException {
         Stopwatch.start();
 
         List<Integer> sequence = new ArrayList<>();
@@ -224,8 +220,6 @@ public class JavaTasks {
                 Integer num = Integer.parseInt(line);
                 sequence.add(IntegerCache.getFromCache(num));
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
         Stopwatch.stop("parseIntLines");
@@ -257,7 +251,9 @@ public class JavaTasks {
         return new Integer[] {res, resCount};
     }
 
-    private static void writeInFileSeq(Integer[] sequence, Integer num, Integer frequency, String outputName) {
+    private static void writeInFileSeq(Integer[] sequence, Integer num, Integer frequency, String outputName)
+            throws IOException {
+
         Stopwatch.start();
 
         try (BufferedWriter wr = new BufferedWriter(new FileWriter(outputName, true))) {
@@ -267,8 +263,6 @@ public class JavaTasks {
             for (int i = 0; i < frequency; i++) {
                 wr.write(num + "\n");
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
         Stopwatch.stop("writeInFileSeq");

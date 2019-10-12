@@ -38,7 +38,7 @@ public class JavaAlgorithms {
      *
      * В случае обнаружения неверного формата файла бросить любое исключение.
      */
-    static public Pair<Integer, Integer> optimizeBuyAndSell(String inputName) {
+    static public Pair<Integer, Integer> optimizeBuyAndSell(String inputName) throws IOException {
         Stopwatch.start();
 
         int[] array = Arrays.stream(parseIntLines(inputName)).mapToInt(i -> i).toArray();
@@ -294,7 +294,7 @@ public class JavaAlgorithms {
      * В файле буквы разделены пробелами, строки -- переносами строк.
      * Остальные символы ни в файле, ни в словах не допускаются.
      */
-    static public Set<String> baldaSearcher(String inputName, Set<String> words) {
+    static public Set<String> baldaSearcher(String inputName, Set<String> words) throws IOException {
 
         Table table = parseBalda(inputName);
 
@@ -359,7 +359,7 @@ public class JavaAlgorithms {
         return false;
     }
 
-    private static Table parseBalda(String inputName) {
+    private static Table parseBalda(String inputName) throws IOException {
         Stopwatch.start();
 
         Map<Cell, Character> values = new HashMap<>();
@@ -393,10 +393,7 @@ public class JavaAlgorithms {
 
             return new Table(values, occurrence, findCellMap, x, y);
 
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        return new Table();
     }
 
     //следит, чтобы в процессе алгоритма не создавались одни и те же подстроки. Для этого для каждой посещённой
