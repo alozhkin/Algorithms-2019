@@ -120,6 +120,14 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
     public boolean remove(Object o) {
         T value = (T) o;
         Node<T> node = find(value);
+        return removeNode(node);
+    }
+    /*
+    Память: O(1)
+    Сложность: O(lgn)
+     */
+
+    private boolean removeNode(Node node) {
         if (node == null) return false;
         if (node.left == null) {
             transplant(node, node.right);
@@ -140,10 +148,6 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
         modCount++;
         return true;
     }
-    /*
-    Память: O(1)
-    Сложность: O(lgn)
-     */
 
     private void transplant(Node<T> to, Node<T> from) {
         if (to.parent == null) {
@@ -176,12 +180,10 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
         if (comparison == 0) {
             return start;
         }
-        //узел больше value
         else if (comparison < 0) {
             if (start.left == null) return start;
             return findEqualsOrBigger(start.left, value);
         }
-        //узел меньше value
         else {
             if (start.right == null) return null;
             return findEqualsOrBigger(start.right, value);
@@ -318,7 +320,7 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
         public void remove() {
             if (modCount != expectedModCount) throw new ConcurrentModificationException();
             if (prev == null) throw new IllegalStateException();
-            BinaryTree.this.remove(prev.value);
+            BinaryTree.this.removeNode(prev);
             expectedModCount = modCount;
             prev = null;
         }
@@ -559,7 +561,7 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
             public void remove() {
                 if (parent.modCount != expectedModCount) throw new ConcurrentModificationException();
                 if (prev == null) throw new IllegalStateException();
-                BinaryTree.this.remove(prev.value);
+                BinaryTree.this.removeNode(prev);
                 prev = null;
                 expectedModCount = parent.modCount;
             }

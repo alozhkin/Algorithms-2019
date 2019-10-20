@@ -133,9 +133,9 @@ public class JavaTasks {
                 sym = input.read();
 
                 if (isPositive) {
-                    tempsCount[num + negativeIntervalSize] += 1;
+                    tempsCount[num + negativeIntervalSize]++;
                 } else {
-                    tempsCount[negativeIntervalSize - num] += 1;
+                    tempsCount[negativeIntervalSize - num]++;
                 }
 
             }
