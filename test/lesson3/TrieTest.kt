@@ -1,9 +1,14 @@
 package lesson3
 
+import lesson4.testIterator
+import lesson4.testIteratorExceptions
+import lesson4.testIteratorRemove
 import org.junit.jupiter.api.Tag
 import kotlin.test.*
 
 class TrieTest {
+
+    private fun createTrie(): MutableSet<String> = Trie()
 
     @Test
     @Tag("Example")
@@ -54,5 +59,45 @@ class TrieTest {
         trie.add("abcde")
 
         assertEquals(setOf("abcdefg", "zyx", "zwv", "zyt", "abcde"), trie)
+    }
+
+    @Test
+    @Tag("Hard")
+    fun rudeIteratorRemoveTest() {
+        val trie = Trie()
+        assertEquals(setOf<String>(), trie)
+        trie.add("1")
+        trie.add("99")
+        trie.add("96")
+        trie.add("9")
+        trie.add("9")
+        val iter = trie.iterator()
+        iter.next()
+        iter.remove()
+        iter.next()
+        iter.remove()
+        iter.next()
+        iter.remove()
+        iter.next()
+        iter.remove()
+        assertEquals(0, trie.size)
+    }
+
+    @Test
+    @Tag("Hard")
+    fun testIterator() {
+        testIterator { createTrie() }
+    }
+
+    @Test
+    @Tag("Hard")
+    fun testIteratorRemove() {
+        testIteratorRemove { createTrie() }
+    }
+
+    @Test
+    @Tag("Example")
+    fun testIteratorExceptions() {
+        testIteratorExceptions { createTrie() }
     }
 }

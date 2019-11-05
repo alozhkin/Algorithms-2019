@@ -140,12 +140,12 @@ public class BinaryTreeJavaTest {
         SortedSet<Integer> subSet = tree.subSet(1, 3);
         SortedSet<Integer> headSet = tree.headSet(3);
         SortedSet<Integer> tailSet = tree.tailSet(2);
-        iteratorCheck(tree, subSet);
-        iteratorCheck(tree, headSet);
-        iteratorCheck(tree, tailSet);
+        testIteratorExceptions(tree, subSet);
+        testIteratorExceptions(tree, headSet);
+        testIteratorExceptions(tree, tailSet);
     }
 
-    private void iteratorCheck(BinaryTree<Integer> tree, SortedSet<Integer> subSet) {
+    private void testIteratorExceptions(BinaryTree<Integer> tree, SortedSet<Integer> subSet) {
         tree.add(8);
         tree.add(7);
         tree.add(6);

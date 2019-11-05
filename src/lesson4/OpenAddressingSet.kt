@@ -5,6 +5,10 @@ class OpenAddressingSet<T : Any>(private val bits: Int) : AbstractMutableSet<T>(
         require(bits in 2..31)
     }
 
+    private var modCount = 0
+
+    private val deletedObject = 42
+
     private val capacity = 1 shl bits
 
     private val storage = Array<Any?>(capacity) { null }
@@ -32,7 +36,7 @@ class OpenAddressingSet<T : Any>(private val bits: Int) : AbstractMutableSet<T>(
         val startingIndex = element.startingIndex()
         var index = startingIndex
         var current = storage[index]
-        while (current != null) {
+        while (current != null && current != deletedObject) {
             if (current == element) {
                 return false
             }
@@ -42,20 +46,103 @@ class OpenAddressingSet<T : Any>(private val bits: Int) : AbstractMutableSet<T>(
         }
         storage[index] = element
         size++
+        modCount++
         return true
     }
 
     /**
      * Для этой задачи пока нет тестов, но вы можете попробовать привести решение и добавить к нему тесты
      */
+    /*
+      Ресурсоёмкость: O(1)
+      Трудоёмкость: в худшем случае вся таблица с открытой адресацией забита, а удаляемого объекта нет
+      O(capacity)
+     */
     override fun remove(element: T): Boolean {
-        TODO("not implemented")
+        val startingIndex = element.startingIndex()
+        var index = startingIndex
+        var current = storage[index]
+        while (current != null) {
+            if (current == element) {
+                removeAt(index)
+            }
+            index = (index + 1) % capacity
+            if (index == startingIndex) {
+                return false
+            }
+            current = storage[index]
+        }
+        return false
+    }
+
+    private fun removeAt(index: Int) {
+        storage[index] = deletedObject
+        size--
+        modCount++
     }
 
     /**
      * Для этой задачи пока нет тестов, но вы можете попробовать привести решение и добавить к нему тесты
      */
+
     override fun iterator(): MutableIterator<T> {
-        TODO("not implemented")
+        return OpenAddressingSetIterator()
+    }
+
+    private inner class OpenAddressingSetIterator : MutableIterator<T> {
+        private var expectedModCount = modCount
+        private var nextIndex = -1
+        private var nowIndex = -1
+        private var now: T? = null
+        private var next: T? = findNext()
+
+        /*
+          Ресурсоёмкость: O(1)
+          Трудоёмкость: O(1)
+        */
+        override fun hasNext(): Boolean {
+            return next != null
+        }
+
+        /*
+          Ресурсоёмкость: O(1)
+          Трудоёмкость: в худшем случае переберу всю таблицу O(capacity)
+        */
+        override fun next(): T {
+            if (expectedModCount != modCount) throw ConcurrentModificationException()
+            if (next == null) throw NoSuchElementException()
+            now = next
+            nowIndex = nextIndex
+            next = findNext()
+            return now!!
+        }
+
+        private fun findNext(): T? {
+            if (size == 0) {
+                return null
+            } else {
+                var current: Any?
+                do {
+                    nextIndex++
+                    if (nextIndex == capacity) {
+                        return null
+                    }
+                    current = storage[nextIndex]
+                } while (current == null || current == deletedObject)
+                return current as T?
+            }
+        }
+
+        /*
+          Ресурсоёмкость: O(1)
+          Трудоёмкость: O(1)
+        */
+        override fun remove() {
+            if (expectedModCount != modCount) throw ConcurrentModificationException()
+            if (now == null) throw IllegalStateException()
+            removeAt(nowIndex)
+            expectedModCount = modCount
+            now = null
+        }
     }
 }
