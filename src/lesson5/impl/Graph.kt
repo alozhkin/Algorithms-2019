@@ -22,13 +22,21 @@ class GraphBuilder {
         override fun getEnd() = _end
 
         override fun getWeight() = weightField
+
+        override fun getOtherEnd(v: Vertex?): Vertex {
+            return when (v) {
+                begin -> end
+                end -> begin
+                else -> throw IllegalArgumentException()
+            }
+        }
     }
 
     private val vertices = mutableMapOf<String, Vertex>()
 
-    private val connections = mutableMapOf<Vertex, Set<EdgeImpl>>()
+    private val connections = mutableMapOf<Vertex, Set<Edge>>()
 
-    private fun addVertex(v: Vertex) {
+    fun addVertex(v: Vertex) {
         vertices[v.name] = v
     }
 
@@ -58,12 +66,13 @@ class GraphBuilder {
             val edges = connections[v] ?: emptySet()
             val result = mutableMapOf<Vertex, Edge>()
             for (edge in edges) {
-                when (v) {
-                    edge.begin -> result[edge.end] = edge
-                    edge.end -> result[edge.begin] = edge
-                }
+                result[edge.getOtherEnd(v)] = edge
             }
             return result
+        }
+
+        override fun getVertexDegree(v: Vertex): Int {
+            return connections[v]?.size ?: 0
         }
     }
 }

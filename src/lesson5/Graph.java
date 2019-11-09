@@ -23,6 +23,9 @@ public interface Graph {
         default int getWeight() {
             return 1;
         }
+
+        @NotNull
+        Vertex getOtherEnd(Vertex v);
     }
 
     @NotNull
@@ -46,4 +49,7 @@ public interface Graph {
     default Edge getConnection(@NotNull Vertex v1, @NotNull Vertex v2) {
         return getConnections(v1).get(v2);
     }
+
+    @NotNull
+    Integer getVertexDegree(Vertex v);
 }

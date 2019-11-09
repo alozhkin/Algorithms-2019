@@ -2,6 +2,9 @@
 
 package lesson5
 
+import lesson5.Graph.*
+import lesson5.impl.GraphBuilder
+
 /**
  * Эйлеров цикл.
  * Средняя
@@ -28,8 +31,44 @@ package lesson5
  * Справка: Эйлеров цикл -- это цикл, проходящий через все рёбра
  * связного графа ровно по одному разу
  */
-fun Graph.findEulerLoop(): List<Graph.Edge> {
-    TODO()
+fun Graph.findEulerLoop(): List<Edge> {
+    if (vertices.isEmpty()
+        || vertices.any { getVertexDegree(it) % 2 != 0 }
+        || edges.size < vertices.size - 1
+    ) {
+        return emptyList()
+    }
+
+    var randomVertex = vertices.random()
+    val vertexSet = mutableSetOf<Vertex>()
+
+    fun findAllVertexInComponent(vertex: Vertex) {
+        for (neighbour in getNeighbors(vertex)) {
+            if (neighbour !in vertexSet) {
+                vertexSet += neighbour
+                findAllVertexInComponent(neighbour)
+            }
+        }
+    }
+
+    if (vertexSet.size != vertices.size) {
+        return emptyList()
+    }
+
+    fun getAllEdgesInRightOrder(): List<Edge> {
+        val edgesSet = mutableSetOf<Edge>()
+        val edgesList = mutableListOf<Edge>()
+        while (edgesSet.size != edges.size) {
+            val connections = getConnections(randomVertex)
+            val edge = connections.values.first { it !in edgesSet }
+            edgesSet += edge
+            edgesList += edge
+            randomVertex = edge.getOtherEnd(randomVertex)
+        }
+        return edgesList
+    }
+
+    return getAllEdgesInRightOrder()
 }
 
 /**
@@ -61,7 +100,40 @@ fun Graph.findEulerLoop(): List<Graph.Edge> {
  * J ------------ K
  */
 fun Graph.minimumSpanningTree(): Graph {
-    TODO()
+    if (vertices.isEmpty()) {
+        return GraphBuilder().build()
+    }
+    val edgesList = mutableListOf<Edge>()
+    val verticesSet = mutableSetOf<Vertex>()
+
+    fun getSpanningTree(v: Vertex) {
+        for ((vertex, edge) in getConnections(v)) {
+            if (vertex !in verticesSet) {
+                verticesSet += vertex
+                edgesList += edge
+                getSpanningTree(vertex)
+            }
+        }
+    }
+
+    val randomVertex = vertices.random()
+    verticesSet += randomVertex
+    getSpanningTree(randomVertex)
+
+    return GraphBuilder().apply {
+        addVertex(randomVertex)
+        if (edgesList[0].begin == randomVertex) {
+            for (edge in edgesList) {
+                addVertex(edge.end)
+                addConnection(edge.begin, edge.end)
+            }
+        } else {
+            for (edge in edgesList) {
+                addVertex(edge.begin)
+                addConnection(edge.begin, edge.end)
+            }
+        }
+    }.build()
 }
 
 /**
@@ -90,8 +162,124 @@ fun Graph.minimumSpanningTree(): Graph {
  *
  * Эта задача может быть зачтена за пятый и шестой урок одновременно
  */
-fun Graph.largestIndependentVertexSet(): Set<Graph.Vertex> {
-    TODO()
+fun Graph.largestIndependentVertexSet(): Set<Vertex> {
+    val firstVertices = getFirstVerticesOfConnectedComponents(this)
+    val result = mutableSetOf<Vertex>()
+    for (first in firstVertices) {
+        result += getLargestIndependentVertexSet(this, first)
+    }
+    return result
+}
+
+private fun getFirstVerticesOfConnectedComponents(graph: Graph): Set<Vertex> {
+    if (graph.vertices.isEmpty()) {
+        return emptySet()
+    }
+
+    fun createConnectedComponentIfCyclesAreAbsent(
+        v: Vertex,
+        verticesSet: MutableSet<Vertex>,
+        edgesSet: MutableSet<Edge>
+    ): Set<Vertex> {
+        for ((vertex, edge) in graph.getConnections(v)) {
+            if (edge !in edgesSet) {
+                if (vertex in verticesSet) {
+                    throw IllegalArgumentException()
+                } else {
+                    verticesSet += vertex
+                    edgesSet += edge
+                    createConnectedComponentIfCyclesAreAbsent(vertex, verticesSet, edgesSet)
+                }
+            }
+        }
+        return verticesSet
+    }
+
+    fun findFirstVerticesOfConnectedComponents(): Set<Vertex> {
+        val firstVertices = mutableSetOf<Vertex>()
+        val connectedComponents = mutableSetOf<Set<Vertex>>()
+        while (connectedComponents.flatten().size != graph.vertices.size) {
+            val firstVertex = graph.vertices.first { it !in connectedComponents.flatten() }
+            val verticesSet = createConnectedComponentIfCyclesAreAbsent(
+                firstVertex, mutableSetOf(), mutableSetOf()
+            )
+            connectedComponents += verticesSet + firstVertex
+            firstVertices += firstVertex
+        }
+        return firstVertices
+    }
+
+    return findFirstVerticesOfConnectedComponents()
+}
+
+private fun getLargestIndependentVertexSet(graph: Graph, firstVertex: Vertex): Set<Vertex> {
+    val I = mutableMapOf<Vertex, Int>()
+    var childrenFlag = false
+    val visited = mutableSetOf<Vertex>()
+
+    fun findLargestIndependentVertexSet(v: Vertex): Int {
+        if (I[v] != null) return I[v]!!
+        visited += v
+        var childrenSum = 0
+        var grandChildrenSum = 0
+        for (child in graph.getNeighbors(v)) {
+            if (child !in visited) {
+                childrenSum += findLargestIndependentVertexSet(child)
+            }
+        }
+        val grandChildren = mutableSetOf<Vertex>()
+        for (child in graph.getNeighbors(v)) {
+            if (child !in visited) {
+                for (grandChild in graph.getNeighbors(child)) {
+                    grandChildren += grandChild
+                }
+            }
+        }
+        for (grandChild in grandChildren) {
+            grandChildrenSum += findLargestIndependentVertexSet(grandChild)
+        }
+        if (grandChildrenSum + 1 >= childrenSum) {
+            I[v] = grandChildrenSum
+            childrenFlag = false
+        } else {
+            I[v] = childrenSum
+            childrenFlag = true
+        }
+        return I[v]!!
+    }
+
+    findLargestIndependentVertexSet(firstVertex)
+    val largestIndependentVertexSet = mutableSetOf<Vertex>()
+    visited.clear()
+
+    fun createLargestIndependentVertexSet(vertices: Set<Vertex>) {
+        for (v in vertices) {
+            val grandChildren = mutableSetOf<Vertex>()
+            for (child in graph.getNeighbors(v)) {
+                visited += child
+                for (grandChild in graph.getNeighbors(child)) {
+                    if (grandChild !in visited) {
+                        grandChildren += grandChild
+                        visited += grandChild
+                    }
+                }
+            }
+            largestIndependentVertexSet += grandChildren
+            createLargestIndependentVertexSet(grandChildren)
+        }
+    }
+
+    if (childrenFlag) {
+        val children = graph.getNeighbors(firstVertex)
+        largestIndependentVertexSet += children
+        visited += children
+        createLargestIndependentVertexSet(children)
+    } else {
+        largestIndependentVertexSet += firstVertex
+        visited += firstVertex
+        createLargestIndependentVertexSet(setOf(firstVertex))
+    }
+    return largestIndependentVertexSet
 }
 
 /**
