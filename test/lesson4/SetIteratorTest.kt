@@ -85,30 +85,36 @@ fun testIteratorRemove(create: () -> MutableSet<String>) {
 }
 
 fun testIteratorExceptions(create: () -> MutableSet<String>) {
-    val tree = create()
-    tree.add("8")
-    tree.add("7")
-    tree.add("6")
+    val set = create()
+    set.add("8")
+    set.add("7")
+    set.add("6")
 
-    var iterator: MutableIterator<*> = tree.iterator()
-    tree.add("3")
+    var iterator: MutableIterator<*> = set.iterator()
+    assertThrows<IllegalStateException> { iterator.remove() }
+
+    iterator = set.iterator()
+    iterator.next()
+    set.add("3")
     assertThrows<ConcurrentModificationException> { iterator.next() }
+    assertThrows<ConcurrentModificationException> { iterator.remove() }
     assertDoesNotThrow { iterator.hasNext() }
 
-    iterator = tree.iterator()
-    tree.remove("3")
+    iterator = set.iterator()
+    iterator.next()
+    set.remove("3")
     assertThrows<ConcurrentModificationException> { iterator.next() }
+    assertThrows<ConcurrentModificationException> { iterator.remove() }
     assertDoesNotThrow { iterator.hasNext() }
 
-    iterator = tree.iterator()
+    iterator = set.iterator()
     iterator.next()
     assertDoesNotThrow { iterator.remove() }
     iterator.next()
     iterator.next()
     assertThrows<NoSuchElementException> { iterator.next() }
 
-
-    iterator = tree.iterator()
+    iterator = set.iterator()
     iterator.next()
     iterator.remove()
     assertThrows<IllegalStateException> { iterator.remove() }

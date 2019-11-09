@@ -25,10 +25,10 @@ enum class Direction(x: Int, y: Int) {
 fun longestCommonSubSequence(first: String, second: String): String {
     val first0 = ("0$first").toCharArray()
     val second0 = ("0$second").toCharArray()
-    val c = MutableList(first0.size + 1) { MutableList(second0.size + 1) { 0 } }
-    val b = MutableList(first0.size + 1) { MutableList(second0.size + 1) { Direction.UP } }
-    for (i in 1 until first0.size) {
-        for (j in 1 until second0.size) {
+    val c = MutableList(first.length + 1) { MutableList(second.length + 1) { 0 } }
+    val b = MutableList(first.length + 1) { MutableList(second.length + 1) { Direction.UP } }
+    for (i in 1..first.length) {
+        for (j in 1..second.length) {
             when {
                 first0[i] == second0[j] -> {
                     c[i][j] = c[i - 1][j - 1] + 1
