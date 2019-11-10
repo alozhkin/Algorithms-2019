@@ -39,12 +39,12 @@ fun fillKnapsackHeuristics(capacity: Int, items: List<Item>, vararg parameters: 
 class KnapsackChoosableSet(set: MutableSet<Choosable> = mutableSetOf(), private val capacity: Int) :
     ChoosableSet(set) {
 
-    override fun tabooPaths(route: Route): Set<Choosable> {
-        val res = mutableSetOf<Choosable>()
-        res += route.toChoosableList()
-        val load = route.limitation
-        res += set.filter { path -> path.limitation + load > capacity }
-        return res
+    init {
+        set.removeIf { it.limitation > capacity }
+    }
+
+    override fun validPaths(route: Route, lastValidPaths: Set<Choosable>): Set<Choosable> {
+        return lastValidPaths.filter { path -> path.limitation + route.limitation <= capacity }.toSet()
     }
 }
 
@@ -111,8 +111,8 @@ class VoyagerChoosableSet(
     private var prevLastVertex: Vertex? = null
     private var firstVertex: Vertex? = null
 
-    override fun tabooPaths(route: Route): Set<Choosable> {
-        if (route.size == verticesNum) return this
+    override fun validPaths(route: Route, lastValidPaths: Set<Choosable>): Set<Choosable> {
+        if (route.size == verticesNum) return emptySet()
 
         val lastEdge = (route.last() as Edge)
         val lastVertex = if (route.size == 1) lastEdge.end else lastEdge.getOtherEnd(prevLastVertex)
@@ -126,17 +126,10 @@ class VoyagerChoosableSet(
         visitedVertex += t.map { it.end }.filter { it != lastVertex }.toSet()
 
         if (visitedVertex.size == verticesNum - 1) {
-            return set.map { it as GraphBuilder.EdgeImpl }.filterNot {
-                (it.begin == firstVertex && it.end == lastVertex)
-                        || (it.begin == lastVertex && it.end == firstVertex)
-            }.toSet()
+            return setOf(graph.getConnection(firstVertex!!, lastVertex)!!)
         }
 
-        val res = mutableSetOf<Choosable>()
-        val connections = graph.getConnections(lastVertex).values
-        res.addAll(set.map { it as GraphBuilder.EdgeImpl }
-            .filter { it !in connections || it.begin in visitedVertex || it.end in visitedVertex })
-        res.addAll(route.toChoosableList().toSet())
-        return res
+        return graph.getConnections(lastVertex).values.filter { it.end !in visitedVertex && it.begin !in visitedVertex }
+            .toSet()
     }
 }

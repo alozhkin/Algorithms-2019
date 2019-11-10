@@ -1,6 +1,5 @@
 package lesson7.ants
 
-import lesson6.knapsack.Item
 import kotlin.math.pow
 import kotlin.random.Random
 
@@ -18,35 +17,35 @@ class AntSolver(params: Params) {
         private var route = Route()
 
         fun buildRoute(pheromoneSignificanceSum: Double) {
-            var tabooPaths = emptySet<Choosable>()
-            while (tabooPaths.size != paths.size) {
-                countPathsProbabilities(tabooPaths, pheromoneSignificanceSum)
+            var validPaths: Set<Choosable> = paths
+            while (validPaths.isNotEmpty()) {
+                countPathsProbabilities(validPaths, pheromoneSignificanceSum)
                 val path = choosePath()
                 route.add(path)
-                tabooPaths = paths.tabooPaths(route)
+                validPaths = paths.validPaths(route, validPaths)
             }
         }
 
-        private fun countPathsProbabilities(tabooPaths: Set<Choosable>, pheromoneSignificanceSum: Double) {
+        private fun countPathsProbabilities(validPaths: Set<Choosable>, pheromoneSignificanceSum: Double) {
             for (path in paths) {
-                if (tabooPaths.contains(path)) {
-                    path.probability = 0.0
-                } else {
+                if (validPaths.contains(path)) {
                     path.probability = path.pheromoneSignificance / pheromoneSignificanceSum
+                } else {
+                    path.probability = 0.0
                 }
             }
         }
 
         private fun choosePath(): Choosable {
-            val rr = MutableList(pathList.size) { 0.0 }
+            val roulette = MutableList(pathList.size) { 0.0 }
 
-            rr[0] = pathList[0].probability
+            roulette[0] = pathList[0].probability
             for (i in 1 until pathList.size) {
-                rr[i] = rr[i - 1] + pathList[i].probability
+                roulette[i] = roulette[i - 1] + pathList[i].probability
             }
 
-            val randDouble = random.nextDouble(rr[pathList.lastIndex])
-            val indexOfPath = findFirstBigger(rr, randDouble)
+            val randDouble = random.nextDouble(roulette[pathList.lastIndex])
+            val indexOfPath = findFirstBigger(roulette, randDouble)
             return pathList[indexOfPath]
         }
 
