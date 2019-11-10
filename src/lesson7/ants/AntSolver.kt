@@ -17,36 +17,32 @@ class AntSolver(params: Params) {
         private var route = Route()
 
         fun buildRoute(pheromoneSignificanceSum: Double) {
-            var validPaths: Set<Choosable> = paths
+            var validPaths = pathList
             while (validPaths.isNotEmpty()) {
                 countPathsProbabilities(validPaths, pheromoneSignificanceSum)
-                val path = choosePath()
+                val path = choosePath(validPaths)
                 route.add(path)
                 validPaths = paths.validPaths(route, validPaths)
             }
         }
 
-        private fun countPathsProbabilities(validPaths: Set<Choosable>, pheromoneSignificanceSum: Double) {
-            for (path in paths) {
-                if (validPaths.contains(path)) {
-                    path.probability = path.pheromoneSignificance / pheromoneSignificanceSum
-                } else {
-                    path.probability = 0.0
-                }
+        private fun countPathsProbabilities(validPaths: List<Choosable>, pheromoneSignificanceSum: Double) {
+            for (path in validPaths) {
+                path.probability = path.pheromoneSignificance / pheromoneSignificanceSum
             }
         }
 
-        private fun choosePath(): Choosable {
-            val roulette = MutableList(pathList.size) { 0.0 }
+        private fun choosePath(validPaths: List<Choosable>): Choosable {
+            val roulette = MutableList(validPaths.size) { 0.0 }
 
-            roulette[0] = pathList[0].probability
-            for (i in 1 until pathList.size) {
-                roulette[i] = roulette[i - 1] + pathList[i].probability
+            roulette[0] = validPaths[0].probability
+            for (i in 1 until validPaths.size) {
+                roulette[i] = roulette[i - 1] + validPaths[i].probability
             }
 
-            val randDouble = random.nextDouble(roulette[pathList.lastIndex])
+            val randDouble = random.nextDouble(roulette[validPaths.lastIndex])
             val indexOfPath = findFirstBigger(roulette, randDouble)
-            return pathList[indexOfPath]
+            return validPaths[indexOfPath]
         }
 
         private fun <E : Comparable<E>> findFirstBigger(map: MutableList<E>, n: E): Int {

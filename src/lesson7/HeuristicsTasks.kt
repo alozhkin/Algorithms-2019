@@ -43,8 +43,11 @@ class KnapsackChoosableSet(set: MutableSet<Choosable> = mutableSetOf(), private 
         set.removeIf { it.limitation > capacity }
     }
 
-    override fun validPaths(route: Route, lastValidPaths: Set<Choosable>): Set<Choosable> {
-        return lastValidPaths.filter { path -> path.limitation + route.limitation <= capacity }.toSet()
+    override fun validPaths(route: Route, lastValidPaths: List<Choosable>): List<Choosable> {
+        return lastValidPaths.filter { path ->
+            path.limitation + route.limitation <= capacity
+                    && path !in route
+        }
     }
 }
 
@@ -111,8 +114,8 @@ class VoyagerChoosableSet(
     private var prevLastVertex: Vertex? = null
     private var firstVertex: Vertex? = null
 
-    override fun validPaths(route: Route, lastValidPaths: Set<Choosable>): Set<Choosable> {
-        if (route.size == verticesNum) return emptySet()
+    override fun validPaths(route: Route, lastValidPaths: List<Choosable>): List<Choosable> {
+        if (route.size == verticesNum) return emptyList()
 
         val lastEdge = (route.last() as Edge)
         val lastVertex = if (route.size == 1) lastEdge.end else lastEdge.getOtherEnd(prevLastVertex)
@@ -122,14 +125,14 @@ class VoyagerChoosableSet(
         prevLastVertex = lastVertex
 
         val t = route.toChoosableList().map { it as GraphBuilder.EdgeImpl }
+        //todo поэлегантнее
         val visitedVertex = t.map { it.begin }.filter { it != lastVertex }.toMutableSet()
         visitedVertex += t.map { it.end }.filter { it != lastVertex }.toSet()
 
         if (visitedVertex.size == verticesNum - 1) {
-            return setOf(graph.getConnection(firstVertex!!, lastVertex)!!)
+            return listOf(graph.getConnection(firstVertex!!, lastVertex)!!)
         }
 
         return graph.getConnections(lastVertex).values.filter { it.end !in visitedVertex && it.begin !in visitedVertex }
-            .toSet()
     }
 }
