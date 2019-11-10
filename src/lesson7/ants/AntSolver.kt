@@ -11,7 +11,6 @@ import kotlin.random.Random
  */
 
 class AntSolver(params: Params) {
-    val random = Random(System.currentTimeMillis())
 
     inner class Ant {
         private var route = Route()
@@ -45,13 +44,13 @@ class AntSolver(params: Params) {
             return validPaths[indexOfPath]
         }
 
-        private fun <E : Comparable<E>> findFirstBigger(map: MutableList<E>, n: E): Int {
-            if (map.isEmpty()) return -1
+        private fun <E : Comparable<E>> findFirstBigger(list: MutableList<E>, n: E): Int {
+            if (list.isEmpty()) return -1
             var l = 0
-            var r = map.size - 1
+            var r = list.size - 1
             while (l <= r) {
                 val m = (l + r).ushr(1)
-                val compare1 = map[m].compareTo(n)
+                val compare1 = list[m].compareTo(n)
                 if (compare1 > 0) {
                     if (m == l) return m
                     r = m
@@ -59,7 +58,7 @@ class AntSolver(params: Params) {
                     l = m + 1
                 }
             }
-            return -1
+            throw IllegalArgumentException("Haven't found something bigger than $n in $list")
         }
 
         fun getRouteCost(): Double {
@@ -87,6 +86,8 @@ class AntSolver(params: Params) {
     private val pheromone0 = params.pheromone0
     private val pheromoneConst = params.pheromoneConst
     private val pheromoneEvaporationCoeff = params.pheromoneEvaporationCoeff
+
+    private val random = Random(System.currentTimeMillis())
 
     private lateinit var pathList: List<Choosable>
     private lateinit var paths: ChoosableSet
