@@ -2,6 +2,9 @@ package lesson7.ants
 
 import kotlin.math.pow
 import kotlin.random.Random
+import java.util.ArrayList
+import java.util.concurrent.*
+
 
 /*
   реализация алгоритма базируется на двух статьях:
@@ -85,6 +88,9 @@ class AntSolver(params: Params) {
     private lateinit var pathList: List<Choosable>
     private lateinit var paths: ChoosableSet
 
+    // todo сколько потоков?
+    private val exec = Executors.newFixedThreadPool(6)
+
     fun solve(choosableSet: ChoosableSet): Route {
         initializePaths(choosableSet)
         for (i in 1..iterationNum) {
@@ -107,10 +113,18 @@ class AntSolver(params: Params) {
         for (ant in ants) {
             ant.goHome()
         }
+
         countPathsProbabilities()
+
+        //TODO чёт не так уж и быстро
+
+        val tasks = mutableListOf<Callable<Unit>>()
         for (ant in ants) {
-            ant.buildRoute()
+            tasks += Callable { ant.buildRoute() }
+//            ant.buildRoute()
         }
+        exec.invokeAll(tasks)
+
     }
 
     private fun countPathsProbabilities() {

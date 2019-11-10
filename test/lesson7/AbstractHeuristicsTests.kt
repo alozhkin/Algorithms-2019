@@ -25,6 +25,8 @@ abstract class AbstractHeuristicsTests {
                 println("Heuristics score = " + fillHeuristics.cost)
                 val fillGreedy = fillKnapsackGreedy(1000, items)
                 println("Greedy score = " + fillGreedy.cost)
+                val fillDynamic = fillKnapsackDynamic(1000, items)
+                println("Dynamic score = " + fillDynamic.cost)
                 assertTrue(fillHeuristics.cost >= fillGreedy.cost)
             } catch (e: StackOverflowError) {
                 println("Greedy failed with Stack Overflow")
