@@ -15,19 +15,12 @@ class AntSolver(params: Params) {
     inner class Ant {
         private var route = Route()
 
-        fun buildRoute(pheromoneSignificanceSum: Double) {
+        fun buildRoute() {
             var validPaths = pathList
             while (validPaths.isNotEmpty()) {
-                countPathsProbabilities(validPaths, pheromoneSignificanceSum)
                 val path = choosePath(validPaths)
                 route.add(path)
                 validPaths = paths.validPaths(route, validPaths)
-            }
-        }
-
-        private fun countPathsProbabilities(validPaths: List<Choosable>, pheromoneSignificanceSum: Double) {
-            for (path in validPaths) {
-                path.probability = path.pheromoneSignificance / pheromoneSignificanceSum
             }
         }
 
@@ -114,17 +107,20 @@ class AntSolver(params: Params) {
         for (ant in ants) {
             ant.goHome()
         }
-        val pheromoneSignificanceSum = countPheromoneSignificanceSum()
+        countPathsProbabilities()
         for (ant in ants) {
-            ant.buildRoute(pheromoneSignificanceSum)
+            ant.buildRoute()
         }
     }
 
-    private fun countPheromoneSignificanceSum(): Double {
+    private fun countPathsProbabilities() {
         for (path in paths) {
             path.pheromoneSignificance = path.pheromone.pow(pheromoneExp) * path.significance
         }
-        return paths.sumByDouble { it.pheromoneSignificance }
+        val pheromoneSignificanceSum = paths.sumByDouble { it.pheromoneSignificance }
+        for (path in paths) {
+            path.probability = path.pheromoneSignificance / pheromoneSignificanceSum
+        }
     }
 
     private fun updatePheromones() {
