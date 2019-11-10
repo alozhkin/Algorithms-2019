@@ -2,6 +2,7 @@
 
 package lesson7
 
+import lesson1.Stopwatch
 import lesson5.Graph
 import lesson5.Graph.*
 import lesson5.Path
@@ -24,9 +25,14 @@ import lesson7.ants.*
  */
 
 fun fillKnapsackHeuristics(capacity: Int, items: List<Item>, vararg parameters: Any): Fill {
+    Stopwatch.start()
+
     val solver = AntSolver(Params(2000, 50))
     val choosableSet = KnapsackChoosableSet(items.toMutableSet(), capacity)
     val res = solver.solve(choosableSet)
+
+    Stopwatch.stop("fillKnapsackHeuristics")
+
     return Fill(res.cost.toInt(), res.toChoosableList().toSet())
 }
 
@@ -55,10 +61,35 @@ class KnapsackChoosableSet(set: MutableSet<Choosable> = mutableSetOf(), private 
  * (не забудьте изменить тесты так, чтобы они передавали эти параметры)
  */
 
-fun Graph.findVoyagingPathHeuristics(vararg parameters: Any): Path {
-    val solver = AntSolver(Params(2000, 50))
-    val choosableSet = VoyagerChoosableSet(this.edges.map { it as Choosable }.toMutableSet(), 6, this)
-    val edgesList = solver.solve(choosableSet).map { it as GraphBuilder.EdgeImpl }
+fun Graph.findVoyagingPathHeuristics(params: Params? = null): Path {
+    val completeGraph = createCompleteGraph(this)
+    val parameters = params ?: Params(2000, 50)
+    val solver = AntSolver(parameters)
+    val choosableSet = VoyagerChoosableSet(
+        completeGraph.edges.toMutableSet(),
+        completeGraph.vertices.size,
+        completeGraph
+    )
+    val route = solver.solve(choosableSet)
+    return createPath(route)
+}
+
+private fun createCompleteGraph(graph: Graph): Graph {
+    val vertexList = graph.vertices.toList()
+    return GraphBuilder().apply {
+        for (i in vertexList.indices) {
+            addVertex(vertexList[i])
+            for (j in i + 1..vertexList.lastIndex) {
+                val connection = graph.getConnection(vertexList[i], vertexList[j])
+                val weight = connection?.weight ?: 100_000_000
+                addConnection(vertexList[i], vertexList[j], weight)
+            }
+        }
+    }.build()
+}
+
+private fun createPath(route: Route): Path {
+    val edgesList = route.map { it as Edge }
     val res = mutableListOf<Vertex>()
     res += edgesList[0].begin
     var last = edgesList[0].end
@@ -89,12 +120,12 @@ class VoyagerChoosableSet(
             firstVertex = lastEdge.getOtherEnd(lastVertex)
         }
         prevLastVertex = lastVertex
+
         val t = route.toChoosableList().map { it as GraphBuilder.EdgeImpl }
         val visitedVertex = t.map { it.begin }.filter { it != lastVertex }.toMutableSet()
         visitedVertex += t.map { it.end }.filter { it != lastVertex }.toSet()
 
         if (visitedVertex.size == verticesNum - 1) {
-            // todo явно есть нормальная функция
             return set.map { it as GraphBuilder.EdgeImpl }.filterNot {
                 (it.begin == firstVertex && it.end == lastVertex)
                         || (it.begin == lastVertex && it.end == firstVertex)

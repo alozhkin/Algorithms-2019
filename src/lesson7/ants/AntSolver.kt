@@ -1,5 +1,6 @@
 package lesson7.ants
 
+import lesson6.knapsack.Item
 import kotlin.math.pow
 import kotlin.random.Random
 
@@ -37,17 +38,33 @@ class AntSolver(params: Params) {
         }
 
         private fun choosePath(): Choosable {
-            val roulette = mutableMapOf<Choosable, Double>()
-            roulette[pathList[0]] = pathList[0].probability
+            val rr = MutableList(pathList.size) { 0.0 }
+
+            rr[0] = pathList[0].probability
             for (i in 1 until pathList.size) {
-                roulette[pathList[i]] = roulette[pathList[i - 1]]!! + pathList[i].probability
+                rr[i] = rr[i - 1] + pathList[i].probability
             }
-            val randDouble = random.nextDouble(roulette[pathList.last()]!!)
-            var indexOfPath = 0
-            while (roulette[pathList[indexOfPath]]!! < randDouble) {
-                indexOfPath++
-            }
+
+            val randDouble = random.nextDouble(rr[pathList.lastIndex])
+            val indexOfPath = findFirstBigger(rr, randDouble)
             return pathList[indexOfPath]
+        }
+
+        private fun <E : Comparable<E>> findFirstBigger(map: MutableList<E>, n: E): Int {
+            if (map.isEmpty()) return -1
+            var l = 0
+            var r = map.size - 1
+            while (l <= r) {
+                val m = (l + r).ushr(1)
+                val compare1 = map[m].compareTo(n)
+                if (compare1 > 0) {
+                    if (m == l) return m
+                    r = m
+                } else {
+                    l = m + 1
+                }
+            }
+            return -1
         }
 
         fun getRouteCost(): Double {
