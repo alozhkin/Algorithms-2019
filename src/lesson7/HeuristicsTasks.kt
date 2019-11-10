@@ -230,50 +230,28 @@ class VoyagerChoosableSet(set: MutableSet<Choosable> = mutableSetOf(), val verti
     var firstVertex: Vertex? = null
 
     override fun tabooPaths(route: Route): Set<Choosable> {
-        if (route.size == verticesNum) return this
-
-        val res = mutableSetOf<GraphBuilder.EdgeImpl>()
-
-        val lastEdge = (route.last() as GraphBuilder.EdgeImpl)
-        var lastVertex = if (lastEdge.end == prevLastVertex) lastEdge.begin else lastEdge.end
+        val lastEdge = (route.last() as Edge)
+        val lastVertex = if (route.size == 1) lastEdge.end else lastEdge.getOtherEnd(prevLastVertex)
         if (route.size == 1) {
-            firstVertex = if (lastEdge.end == lastVertex) lastEdge.begin else lastEdge.end
+            firstVertex = lastEdge.getOtherEnd(lastVertex)
         }
         prevLastVertex = lastVertex
-
-        var right = set.map { it as GraphBuilder.EdgeImpl }.filter {
-            it !in route && (it.end == lastVertex || it.begin == lastVertex)
-        }
         val t = route.getChoosable().map { it as GraphBuilder.EdgeImpl }
         val tabooVertices = t.map { it.begin }.filter { it != lastVertex }.toMutableSet()
         tabooVertices += t.map { it.end }.filter { it != lastVertex }.toSet()
 
         if (tabooVertices.size == verticesNum - 1) {
-            return set.filter { it !in right }.toMutableSet()
+            return set.map { it as GraphBuilder.EdgeImpl }.filterNot {
+                (it.begin == firstVertex && it.end == lastVertex)
+                        || (it.begin == lastVertex && it.end == firstVertex)
+            }.toSet()
         }
 
-        res += route.getChoosable().map { it as GraphBuilder.EdgeImpl }
-
-        res += set.map { it as GraphBuilder.EdgeImpl }.filter {
-            (it.begin in tabooVertices || it.end in tabooVertices)
-                    || (it.begin != lastVertex && it.end != lastVertex)
-        }
-        if (res.size == size && tabooVertices.size + 1 != verticesNum) {
-            res.clear()
-            lastVertex = firstVertex!!
-            prevLastVertex = firstVertex
-            route.reverse()
-            res += route.getChoosable().map { it as GraphBuilder.EdgeImpl }
-            val t = route.getChoosable().map { it as GraphBuilder.EdgeImpl }
-            val tabooVertices = t.map { it.begin }.filter { it != lastVertex }.toMutableSet()
-            tabooVertices += t.map { it.end }.filter { it != lastVertex }.toSet()
-            res += set.map { it as GraphBuilder.EdgeImpl }.filter {
+        val res =
+            set.map { it as GraphBuilder.EdgeImpl }.filter {
                 (it.begin in tabooVertices || it.end in tabooVertices)
                         || (it.begin != lastVertex && it.end != lastVertex)
-            }
-            if (res.size == size) throw AssertionError()
-            return res
-        }
+            }.toSet()
         return res
     }
 }
