@@ -16,7 +16,7 @@ fun testIterator(create: () -> MutableSet<String>) {
         val actualSet = create()
         kotlin.test.assertFalse(
             actualSet.iterator().hasNext(),
-            "Iterator of empty set should not have next element"
+            "Iterator of empty list should not have next element"
         )
         for (element in list) {
             controlSet += element

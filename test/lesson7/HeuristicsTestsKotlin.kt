@@ -4,6 +4,11 @@ import org.junit.jupiter.api.Tag
 import kotlin.test.Test
 
 class HeuristicsTestsKotlin : AbstractHeuristicsTests() {
+    @Test
+    @Tag("Impossible")
+    fun testFillKnapsack() {
+        fillKnapsack()
+    }
 
     @Test
     @Tag("Impossible")

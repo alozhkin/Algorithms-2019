@@ -38,7 +38,6 @@ class AnnealingVoyagingPathSearcher(
         var state: List<Int> = (0 until size).toMutableList().apply { shuffle() }
         for (i in 1..iterationNumber) {
             val newState = state.generateNewState()
-            assert(newState.size == size)
             val evaluation = state.evaluation()
             val newEvaluation = newState.evaluation()
 

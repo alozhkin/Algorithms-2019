@@ -196,7 +196,7 @@ public class JavaAlgorithms {
      * Если общих подстрок нет, вернуть пустую строку.
      * При сравнении подстрок, регистр символов *имеет* значение.
      * Если имеется несколько самых длинных общих подстрок одной длины,
-     * вернуть ту из них, которая встречается раньше в строке first.
+     * вернуть ту из них, которая встречается раньше в строке firstVertex.
      */
     static public String longestCommonSubstring(String first, String second) {
         String a = first.length() > second.length() ? first : second;

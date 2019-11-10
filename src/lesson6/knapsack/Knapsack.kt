@@ -1,8 +1,9 @@
 package lesson6.knapsack
 
+import lesson7.Choosable
 import java.util.*
 
-data class Fill(val cost: Int, val items: Set<Item>) {
+data class Fill(val cost: Int, val items: Set<Choosable>) {
     operator fun plus(fill: Fill) = Fill(cost + fill.cost, items + fill.items)
 
     constructor(cost: Int, vararg items: Item) : this(cost, items.toSet())
@@ -12,7 +13,8 @@ data class Fill(val cost: Int, val items: Set<Item>) {
 
 data class LoadCount(val load: Int, val count: Int)
 
-data class Item(val cost: Int, val weight: Int)
+//todo как избавиться от дублирования
+data class Item(val cost: Int, val weight: Int) : Choosable(cost.toDouble(), weight.toDouble())
 
 fun fillKnapsackDynamic(
     load: Int, items: List<Item>,
@@ -52,6 +54,6 @@ fun fillKnapsackGreedy(load: Int, items: List<Item>): Fill {
 
 fun main() {
     val items = listOf(Item(8, 10), Item(5, 12), Item(6, 8), Item(10, 15), Item(4, 2))
-    println(fillKnapsackDynamic(300000000, items))
+    println(fillKnapsackDynamic(30, items))
     println(fillKnapsackGreedy(30, items))
 }

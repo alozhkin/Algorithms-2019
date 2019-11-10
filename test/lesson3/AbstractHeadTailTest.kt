@@ -245,7 +245,7 @@ abstract class AbstractHeadTailTest {
             }
             val treeSet = TreeSet<Int>()
             val binarySet = BinaryTree<Int>().subSet(0, 101)
-            assertFalse(binarySet.iterator().hasNext(), "Iterator of empty set should not have next element")
+            assertFalse(binarySet.iterator().hasNext(), "Iterator of empty list should not have next element")
             for (element in list) {
                 treeSet += element
                 binarySet += element
