@@ -1,5 +1,6 @@
 package lesson5;
 
+import lesson7.ants.Choosable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,7 +14,7 @@ public interface Graph {
         String getName();
     }
 
-    interface Edge {
+    interface Edge extends Choosable {
         @NotNull
         Vertex getBegin();
 

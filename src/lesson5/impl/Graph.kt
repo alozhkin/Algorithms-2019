@@ -3,7 +3,7 @@ package lesson5.impl
 import lesson5.Graph.Edge
 import lesson5.Graph
 import lesson5.Graph.Vertex
-import lesson7.Choosable
+import lesson7.ants.ChoosableImpl
 
 class GraphBuilder {
 
@@ -17,7 +17,7 @@ class GraphBuilder {
         private val weightField: Int,
         private val _begin: Vertex,
         private val _end: Vertex
-    ) : Edge, Choosable(1.0, weightField.toDouble()) {
+    ) : Edge, ChoosableImpl(1.0, weightField.toDouble()) {
         override fun getBegin() = _begin
 
         override fun getEnd() = _end

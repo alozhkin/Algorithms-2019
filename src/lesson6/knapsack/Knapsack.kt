@@ -1,6 +1,7 @@
 package lesson6.knapsack
 
-import lesson7.Choosable
+import lesson7.ants.Choosable
+import lesson7.ants.ChoosableImpl
 import java.util.*
 
 data class Fill(val cost: Int, val items: Set<Choosable>) {
@@ -13,8 +14,7 @@ data class Fill(val cost: Int, val items: Set<Choosable>) {
 
 data class LoadCount(val load: Int, val count: Int)
 
-//todo как избавиться от дублирования
-data class Item(val cost: Int, val weight: Int) : Choosable(cost.toDouble(), weight.toDouble())
+data class Item(val cost: Int, val weight: Int) : ChoosableImpl(cost.toDouble(), weight.toDouble())
 
 fun fillKnapsackDynamic(
     load: Int, items: List<Item>,
