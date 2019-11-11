@@ -45,7 +45,6 @@ class KnapsackChoosableSet(set: MutableSet<Choosable> = mutableSetOf(), private 
     }
 
     override fun validPaths(route: Route, lastValidPaths: List<Choosable>): List<Choosable> {
-        // todo придумать что-то побыстрей
         return lastValidPaths.filter { path ->
             path.limitation + route.limitation <= capacity
                     && path !in route

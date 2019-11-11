@@ -2,7 +2,6 @@ package lesson7
 
 import lesson5.Graph
 import lesson5.Path
-import lesson5.findVoyagingPath
 import lesson5.impl.GraphBuilder
 import lesson6.knapsack.Fill
 import lesson6.knapsack.Item
@@ -10,11 +9,7 @@ import lesson6.knapsack.fillKnapsackDynamic
 import lesson6.knapsack.fillKnapsackGreedy
 import lesson7.annealing.findVoyagingPathAnnealing
 import lesson7.ants.Params
-import org.junit.Ignore
-import org.junit.jupiter.api.Tag
-import org.junit.jupiter.api.Test
 import java.util.*
-import kotlin.reflect.jvm.internal.impl.types.typesApproximation.ApproximationBounds
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
