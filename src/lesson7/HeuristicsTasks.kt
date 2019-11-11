@@ -24,10 +24,11 @@ import lesson7.ants.*
  * (не забудьте изменить тесты так, чтобы они передавали эти параметры)
  */
 
-fun fillKnapsackHeuristics(capacity: Int, items: List<Item>, vararg parameters: Any): Fill {
+fun fillKnapsackHeuristics(capacity: Int, items: List<Item>, params: Params? = null): Fill {
     Stopwatch.start()
 
-    val solver = AntSolver(Params(2000, 50))
+    val parameters = params ?: Params(2000, 50)
+    val solver = AntSolver(parameters)
     val choosableSet = KnapsackChoosableSet(items.toMutableSet(), capacity)
     val res = solver.solve(choosableSet)
 
@@ -66,6 +67,8 @@ class KnapsackChoosableSet(set: MutableSet<Choosable> = mutableSetOf(), private 
  */
 
 fun Graph.findVoyagingPathHeuristics(params: Params? = null): Path {
+    Stopwatch.start()
+
     val completeGraph = createCompleteGraph(this)
     val parameters = params ?: Params(2000, 50)
     val solver = AntSolver(parameters)
@@ -75,6 +78,9 @@ fun Graph.findVoyagingPathHeuristics(params: Params? = null): Path {
         completeGraph
     )
     val route = solver.solve(choosableSet)
+
+    Stopwatch.stop("findVoyagingPathHeuristics")
+
     return createPath(route)
 }
 
@@ -125,11 +131,11 @@ class VoyagerChoosableSet(
         val visitedVertices: MutableSet<Vertex> = getVisitedVerticesBesideLast(route, lastVertex)
 
         if (visitedVertices.size == verticesNum - 1) {
-            return closingCycleSet(threadLocalFirstVertex.get(), lastVertex)
+            return closingCycleEdge(threadLocalFirstVertex.get(), lastVertex)
         }
 
-        return graph.getConnections(lastVertex)
-            .values.filter { it.end !in visitedVertices && it.begin !in visitedVertices }
+        return graph.getConnections(lastVertex).values
+            .filter { it.end !in visitedVertices && it.begin !in visitedVertices }
     }
 
     private fun getLastVertex(route: Route): Vertex {
@@ -159,7 +165,7 @@ class VoyagerChoosableSet(
         return visitedVertices
     }
 
-    private fun closingCycleSet(firstVertex: Vertex?, lastVertex: Vertex): List<Choosable> {
+    private fun closingCycleEdge(firstVertex: Vertex?, lastVertex: Vertex): List<Choosable> {
         return listOf(graph.getConnection(firstVertex!!, lastVertex)!!)
     }
 }

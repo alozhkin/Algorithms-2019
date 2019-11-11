@@ -2,7 +2,6 @@ package lesson7.ants
 
 import kotlin.math.pow
 import kotlin.random.Random
-import java.util.ArrayList
 import java.util.concurrent.*
 
 
@@ -88,8 +87,7 @@ class AntSolver(params: Params) {
     private lateinit var pathList: List<Choosable>
     private lateinit var paths: ChoosableSet
 
-    // todo сколько потоков?
-    private val exec = Executors.newFixedThreadPool(6)
+    private val exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 2)
 
     fun solve(choosableSet: ChoosableSet): Route {
         initializePaths(choosableSet)
@@ -116,15 +114,11 @@ class AntSolver(params: Params) {
 
         countPathsProbabilities()
 
-        //TODO чёт не так уж и быстро
-
         val tasks = mutableListOf<Callable<Unit>>()
         for (ant in ants) {
             tasks += Callable { ant.buildRoute() }
-//            ant.buildRoute()
         }
         exec.invokeAll(tasks)
-
     }
 
     private fun countPathsProbabilities() {

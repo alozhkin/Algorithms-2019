@@ -2,34 +2,84 @@ package lesson7
 
 import lesson5.Graph
 import lesson5.Path
+import lesson5.findVoyagingPath
 import lesson5.impl.GraphBuilder
 import lesson6.knapsack.Fill
 import lesson6.knapsack.Item
 import lesson6.knapsack.fillKnapsackDynamic
 import lesson6.knapsack.fillKnapsackGreedy
+import lesson7.annealing.findVoyagingPathAnnealing
+import lesson7.ants.Params
+import org.junit.Ignore
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
 import java.util.*
+import kotlin.reflect.jvm.internal.impl.types.typesApproximation.ApproximationBounds
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 abstract class AbstractHeuristicsTests {
 
-    fun fillKnapsackCompareWithGreedyTest(fillKnapsackHeuristics: (Int, List<Item>) -> Fill) {
+    fun fillKnapsackCompareWithGreedyTest(fillKnapsackHeuristics: (Int, List<Item>, Params) -> Fill) {
+        // a lot best items
+        fillKnapsackCompareWithGreedyTest(
+            fillKnapsackHeuristics,
+            Params(600, 200, 1.0, 3.0),
+            200,
+            500,
+            60,
+            1000
+        )
+        // two-three best items
+        fillKnapsackCompareWithGreedyTest(
+            fillKnapsackHeuristics,
+            Params(2000, 50, 1.0, 1.0),
+            1000,
+            1000,
+            600,
+            1000
+        )
+        // one best item
+        fillKnapsackCompareWithGreedyTest(
+            fillKnapsackHeuristics,
+            Params(2000, 50, 1.0, 1.0),
+            1000,
+            100,
+            600,
+            1000
+        )
+    }
+
+    private fun fillKnapsackCompareWithGreedyTest(
+        fillKnapsackHeuristics: (Int, List<Item>, Params) -> Fill,
+        params: Params,
+        itemsNum: Int,
+        costBound: Int,
+        approximateWeight: Int,
+        maxLoad: Int
+    ) {
         for (i in 0..9) {
             val items = mutableListOf<Item>()
             val random = Random()
-            for (j in 0 until 1000) {
-                items += Item(1 + random.nextInt(1000), 300 + random.nextInt(600))
+            for (j in 0 until itemsNum) {
+                items += Item(
+                    1 + random.nextInt(costBound),
+                    approximateWeight / 2 + random.nextInt(approximateWeight)
+                )
             }
+            var nextFuncToBeDone = "Heuristics"
             try {
-                val fillHeuristics = fillKnapsackHeuristics(1000, items)
+                val fillHeuristics = fillKnapsackHeuristics.invoke(maxLoad, items, params)
                 println("Heuristics score = " + fillHeuristics.cost)
-                val fillGreedy = fillKnapsackGreedy(1000, items)
+                nextFuncToBeDone = "Greedy"
+                val fillGreedy = fillKnapsackGreedy(maxLoad, items)
                 println("Greedy score = " + fillGreedy.cost)
-                val fillDynamic = fillKnapsackDynamic(1000, items)
+                nextFuncToBeDone = "Dynamic"
+                val fillDynamic = fillKnapsackDynamic(maxLoad, items)
                 println("Dynamic score = " + fillDynamic.cost)
                 assertTrue(fillHeuristics.cost >= fillGreedy.cost)
             } catch (e: StackOverflowError) {
-                println("Greedy failed with Stack Overflow")
+                println("$nextFuncToBeDone failed with Stack Overflow")
             }
         }
     }
@@ -64,19 +114,57 @@ abstract class AbstractHeuristicsTests {
         }
     }
 
+    fun findRandomVoyagingPath(findVoyagingPathHeuristics: Graph.(Params) -> Path) {
+        val random = Random()
+        val graph = GraphBuilder().apply {
+            val vertices = mutableListOf<Graph.Vertex>()
+            for (i in 0..99) {
+                vertices += addVertex(i.toString())
+            }
+            for (i in 0..99) {
+                for (j in i + 1..99) {
+                    addConnection(vertices[i], vertices[j], 1 + random.nextInt(100))
+                }
+            }
+        }.build()
+        val pathActual = graph.findVoyagingPathHeuristics(
+            Params(
+                200,
+                50
+            )
+        )
+        val pathExpected = graph.findVoyagingPathAnnealing(startTemperature = 3000, iterationNumber = 1000)
+        println("Heuristic length ${pathActual.length}")
+        println(pathActual)
+        println("Annealing length ${pathExpected.length}")
+        assertTrue(pathActual < pathExpected)
+
+        val vertices = pathActual.vertices
+        assertEquals(vertices.first(), vertices.last(), "Voyaging path $vertices must be loop!")
+        val withoutLast = vertices.dropLast(1)
+        assertEquals(graph.vertices.size, withoutLast.size, "Voyaging path $vertices must travel through all vertices!")
+        graph.vertices.forEach {
+            assertTrue(it in vertices, "Voyaging path $vertices must travel through all vertices!")
+        }
+
+    }
+
     fun fillKnapsack() {
         var capacity = 30
-        var items = listOf(Item(8, 10), Item(5, 12), Item(6, 8), Item(10, 15), Item(4, 2))
-        var myFill = fillKnapsackHeuristics(capacity, items)
-        var optimalFill = fillKnapsackDynamic(capacity, items)
-        var myLoad = myFill.items.fold(0.0) { prev, cur -> prev + cur.limitation }
-        var optimalLoad = optimalFill.items.fold(0.0) { prev, cur -> prev + cur.limitation }
+        var items = listOf(
+            Item(8, 10),
+            Item(5, 12),
+            Item(6, 8),
+            Item(10, 15),
+            Item(4, 2)
+        )
+        var myLoad = fillKnapsackHeuristics(capacity, items).items.fold(0.0) { prev, cur -> prev + cur.limitation }
+        var optimalLoad = fillKnapsackDynamic(capacity, items).items.fold(0.0) { prev, cur -> prev + cur.limitation }
         require(myLoad <= capacity)
         println(myLoad)
         println(optimalLoad)
-        println(myFill)
-        println(optimalFill)
         println()
+        assertEquals(optimalLoad, optimalLoad)
 
         capacity = 50
         items = listOf(
@@ -91,16 +179,14 @@ abstract class AbstractHeuristicsTests {
             Item(10, 10),
             Item(11, 11)
         )
-        myFill = fillKnapsackHeuristics(capacity, items)
-        optimalFill = fillKnapsackDynamic(capacity, items)
-        myLoad = myFill.items.fold(0.0) { prev, cur -> prev + cur.limitation }
-        optimalLoad = optimalFill.items.fold(0.0) { prev, cur -> prev + cur.limitation }
+
+        myLoad = fillKnapsackHeuristics(capacity, items).items.fold(0.0) { prev, cur -> prev + cur.limitation }
+        optimalLoad = fillKnapsackDynamic(capacity, items).items.fold(0.0) { prev, cur -> prev + cur.limitation }
         require(myLoad <= capacity)
         println(myLoad)
         println(optimalLoad)
-        println(myFill)
-        println(optimalFill)
         println()
+        assertEquals(optimalLoad, optimalLoad)
 
         capacity = 50
         items = listOf(
@@ -114,16 +200,13 @@ abstract class AbstractHeuristicsTests {
             Item(8, 8),
             Item(10, 10)
         )
-        myFill = fillKnapsackHeuristics(capacity, items)
-        optimalFill = fillKnapsackDynamic(capacity, items)
-        myLoad = myFill.items.fold(0.0) { prev, cur -> prev + cur.limitation }
-        optimalLoad = optimalFill.items.fold(0.0) { prev, cur -> prev + cur.limitation }
+
+        myLoad = fillKnapsackHeuristics(capacity, items).items.fold(0.0) { prev, cur -> prev + cur.limitation }
+        optimalLoad = fillKnapsackDynamic(capacity, items).items.fold(0.0) { prev, cur -> prev + cur.limitation }
         require(myLoad <= capacity)
         println(myLoad)
         println(optimalLoad)
-        println(myFill)
-        println(optimalFill)
         println()
+        assertEquals(optimalLoad, optimalLoad)
     }
-
 }

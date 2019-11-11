@@ -10,15 +10,22 @@ class HeuristicsTestsKotlin : AbstractHeuristicsTests() {
         fillKnapsack()
     }
 
+    // этот тест занимает примерно 2 минуты
     @Test
     @Tag("Impossible")
     fun testFillKnapsackCompareWithGreedyTest() {
-        fillKnapsackCompareWithGreedyTest { load, items -> fillKnapsackHeuristics(load, items) }
+        fillKnapsackCompareWithGreedyTest { load, items, params -> fillKnapsackHeuristics(load, items, params) }
     }
 
     @Test
     @Tag("Impossible")
     fun testFindVoyagingPathHeuristics() {
         findVoyagingPathHeuristics { findVoyagingPathHeuristics() }
+    }
+
+    @Test
+    @Tag("Impossible")
+    fun testFindRandomVoyagingPath() {
+        findRandomVoyagingPath { params -> findVoyagingPathHeuristics(params) }
     }
 }
