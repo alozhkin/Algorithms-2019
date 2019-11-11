@@ -13,8 +13,6 @@ import lesson7.ants.*
 
 // Примечание: в этом уроке достаточно решить одну задачу
 
-//TODO МНЕ НУЖНЫ ПАРАЛЛЕЛЬНЫЕ МУРАВЬИ!!!
-
 /**
  * Решить задачу о ранце (см. урок 6) любым эвристическим методом
  *
@@ -108,34 +106,60 @@ private fun createPath(route: Route): Path {
 }
 
 class VoyagerChoosableSet(
-    set: MutableSet<Choosable> = mutableSetOf(),
+    set: MutableSet<Edge>,
     private val verticesNum: Int,
     val graph: Graph
-) :
-    ChoosableSet(set) {
+) : ChoosableSet(set as MutableSet<Choosable>) {
 
-    private var prevLastVertex: Vertex? = null
-    private var firstVertex: Vertex? = null
+    private var threadLocalPrevLastVertex = ThreadLocal<Vertex?>()
+    private var threadLocalFirstVertex = ThreadLocal<Vertex?>()
 
     override fun validPaths(route: Route, lastValidPaths: List<Choosable>): List<Choosable> {
         if (route.size == verticesNum) return emptyList()
 
-        val lastEdge = (route.last() as Edge)
-        val lastVertex = if (route.size == 1) lastEdge.end else lastEdge.getOtherEnd(prevLastVertex)
+        val lastVertex = getLastVertex(route)
         if (route.size == 1) {
-            firstVertex = lastEdge.getOtherEnd(lastVertex)
-        }
-        prevLastVertex = lastVertex
-
-        val t = route.toChoosableList().map { it as GraphBuilder.EdgeImpl }
-        //todo поэлегантнее
-        val visitedVertex = t.map { it.begin }.filter { it != lastVertex }.toMutableSet()
-        visitedVertex += t.map { it.end }.filter { it != lastVertex }.toSet()
-
-        if (visitedVertex.size == verticesNum - 1) {
-            return listOf(graph.getConnection(firstVertex!!, lastVertex)!!)
+            rememberFirstVertex(route, lastVertex)
         }
 
-        return graph.getConnections(lastVertex).values.filter { it.end !in visitedVertex && it.begin !in visitedVertex }
+        val visitedVertices: MutableSet<Vertex> = getVisitedVerticesBesideLast(route, lastVertex)
+
+        if (visitedVertices.size == verticesNum - 1) {
+            return closingCycleSet(threadLocalFirstVertex.get(), lastVertex)
+        }
+
+        return graph.getConnections(lastVertex)
+            .values.filter { it.end !in visitedVertices && it.begin !in visitedVertices }
+    }
+
+    private fun getLastVertex(route: Route): Vertex {
+        val lastEdge = (route.last() as Edge)
+        val lastVertex = if (route.size == 1) {
+            lastEdge.end
+        } else {
+            lastEdge.getOtherEnd(threadLocalPrevLastVertex.get())
+        }
+        threadLocalPrevLastVertex.set(lastVertex)
+        return lastVertex
+    }
+
+    private fun rememberFirstVertex(route: Route, lastVertex: Vertex) {
+        val lastEdge = (route.last() as Edge)
+        threadLocalFirstVertex.set(lastEdge.getOtherEnd(lastVertex))
+    }
+
+    private fun getVisitedVerticesBesideLast(route: Route, lastVertex: Vertex): MutableSet<Vertex> {
+        val visitedVertices = mutableSetOf<Vertex>()
+        for (edge in route.toChoosableList()) {
+            edge as Edge
+            visitedVertices.add(edge.begin)
+            visitedVertices.add(edge.end)
+        }
+        visitedVertices.remove(lastVertex)
+        return visitedVertices
+    }
+
+    private fun closingCycleSet(firstVertex: Vertex?, lastVertex: Vertex): List<Choosable> {
+        return listOf(graph.getConnection(firstVertex!!, lastVertex)!!)
     }
 }
