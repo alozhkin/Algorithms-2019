@@ -5,7 +5,6 @@ package lesson6
 import lesson6.table.*
 import java.io.File
 import kotlin.math.ceil
-import kotlin.math.max
 
 /**
  * Наибольшая общая подпоследовательность.
@@ -42,7 +41,7 @@ fun longestCommonSubSequence(first: String, second: String): String {
 
     val res = StringBuilder()
 
-    fun print(cell: Cell) {
+    fun restore(cell: Cell) {
         val direction = table.getDirection(cell)
         when {
             cell.line == -1 || cell.symbol == -1 -> return
@@ -50,10 +49,10 @@ fun longestCommonSubSequence(first: String, second: String): String {
                 res.append(short[cell.line])
             }
         }
-        print(direction.getNext(cell))
+        restore(direction.getNext(cell))
     }
 
-    print(Cell(short.length - 1, long.length - 1))
+    restore(Cell(short.length - 1, long.length - 1))
 
     return res.reverse().toString()
 }
@@ -70,35 +69,40 @@ fun longestCommonSubSequence(first: String, second: String): String {
  * то вернуть ту, в которой числа расположены раньше (приоритет имеют первые числа).
  * В примере ответами являются 2, 8, 9, 12 или 2, 5, 9, 12 -- выбираем первую из них.
  */
+// todo можно приколоться и сделать таблицу с линкед листами для этого задания
+// todo n^2 ой как не хорошо
 fun longestIncreasingSubSequence(list: List<Int>): List<Int> {
     if (list.isEmpty()) return emptyList()
-    val d = MutableList(list.size) { 0 }
-    val p = MutableList(list.size) { 0 }
-    for (i in list.indices) {
-        var max = 0
-        for (j in 0 until i) {
-            if (list[j] < list[i] && d[j] > max) {
-                max = d[j]
-                p[i] = j
+    val longestSubSeq = MutableList(list.size) { 0 }
+    val prevElem = MutableList(list.size) { 0 }
+
+    fun count() {
+        for (i in list.indices) {
+            var max = 0
+            for (j in 0 until i) {
+                if (list[j] < list[i] && longestSubSeq[j] > max) {
+                    max = longestSubSeq[j]
+                    prevElem[i] = j
+                }
             }
-        }
-        d[i] = max(1, max + 1)
-    }
-    var maxI = 0
-    var max = 0
-    for (i in list.indices) {
-        if (d[i] > max) {
-            maxI = i
-            max = d[i]
+            longestSubSeq[i] = max + 1
         }
     }
-    val pos = mutableListOf<Int>()
-    pos += list[maxI]
-    while (d[maxI] != 1) {
-        maxI = p[maxI]
-        pos += list[maxI]
+
+    fun restore(): List<Int> {
+        val max = longestSubSeq.max()
+        var maxIndex = longestSubSeq.indexOf(max)
+        val pos = mutableListOf<Int>()
+        pos += list[maxIndex]
+        while (longestSubSeq[maxIndex] != 1) {
+            maxIndex = prevElem[maxIndex]
+            pos += list[maxIndex]
+        }
+        return pos.reversed()
     }
-    return pos.reversed()
+
+    count()
+    return restore()
 }
 
 /**
@@ -122,31 +126,30 @@ fun longestIncreasingSubSequence(list: List<Int>): List<Int> {
  * Здесь ответ 2 + 3 + 4 + 1 + 2 = 12
  */
 fun shortestPathOnField(inputName: String): Int {
-    val source = parseFile(inputName)
-    for ((cell, value) in source) {
-        val upperLeft = source.getNeighbourValue(cell, Direction.UPPER_LEFT)
-        val up = source.getNeighbourValue(cell, Direction.UP)
-        val left = source.getNeighbourValue(cell, Direction.LEFT)
-        if (!cell.isStarting()) {
-            source[cell] = minOf(upperLeft, up, left) + value
-        }
-    }
-    return source[Cell(source.height - 1, source.length - 1)]
-}
-
-fun parseFile(inputName: String): DirectionsTable<Int> {
     File(inputName).bufferedReader().use { reader ->
-        val lines = reader.readLines()
-        val length = ceil(lines[0].length.toDouble() / 2).toInt()
-        val height = lines.size
-        File(inputName).bufferedReader().use { reader2 ->
-            val table = DirectionsTable(TableImpl(length, height, Int.MAX_VALUE))
-            for ((cell, _) in table) {
-                table[cell] = reader2.read() - '0'.toInt()
-                reader2.read()
+        val firstLine = reader.readLine()
+        val length = ceil(firstLine.length.toDouble() / 2).toInt()
+        val table = InfinityTable(length, Int.MAX_VALUE)
+        table[Cell(0, 0)] = 0
+        val iterator = table.iterator()
+
+        fun parseLine(line: String) {
+            for (i in line.indices step 2) {
+                val (cell, _) = iterator.next()
+                val num = line[i].toInt() - '0'.toInt()
+                val upperLeft = table.getNeighbourValue(cell, Direction.UPPER_LEFT)
+                val up = table.getNeighbourValue(cell, Direction.UP)
+                val left = table.getNeighbourValue(cell, Direction.LEFT)
+                table[cell] = minOf(upperLeft, up, left) + num
             }
-            return table
         }
+
+        parseLine(firstLine)
+        for (line in reader.readLines()) {
+            parseLine(line)
+        }
+
+        return table[Cell(table.height - 1, length - 1)]
     }
 }
 
