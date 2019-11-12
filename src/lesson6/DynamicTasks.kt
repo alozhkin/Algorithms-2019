@@ -2,6 +2,9 @@
 
 package lesson6
 
+import lesson6.table.*
+import java.io.File
+import kotlin.math.ceil
 import kotlin.math.max
 
 /**
@@ -16,53 +19,43 @@ import kotlin.math.max
  * Если есть несколько самых длинных общих подпоследовательностей, вернуть любую из них.
  * При сравнении подстрок, регистр символов *имеет* значение.
  */
-enum class Direction(x: Int, y: Int) {
-    UP(0, -1),
-    LEFT(-1, 0),
-    UPPER_LEFT(-1, -1)
-}
 
 fun longestCommonSubSequence(first: String, second: String): String {
-    val first0 = ("0$first").toCharArray()
-    val second0 = ("0$second").toCharArray()
-    val c = MutableList(first.length + 1) { MutableList(second.length + 1) { 0 } }
-    val b = MutableList(first.length + 1) { MutableList(second.length + 1) { Direction.UP } }
-    for (i in 1..first.length) {
-        for (j in 1..second.length) {
-            when {
-                first0[i] == second0[j] -> {
-                    c[i][j] = c[i - 1][j - 1] + 1
-                    b[i][j] = Direction.UPPER_LEFT
-                }
-                c[i - 1][j] >= c[i][j - 1] -> {
-                    c[i][j] = c[i - 1][j]
-                    b[i][j] = Direction.UP
-                }
-                else -> {
-                    c[i][j] = c[i][j - 1]
-                    b[i][j] = Direction.LEFT
-                }
+    val short = if (first.length <= second.length) first else second
+    val long = if (first.length > second.length) first else second
+
+    val table = DirectionsTable(TableImpl(short.length, long.length, 0))
+    for ((cell, _) in table) {
+        when {
+            short[cell.line] == long[cell.symbol] -> {
+                val neighbour = table.getNeighbourValue(cell, Direction.UPPER_LEFT)
+                table.set(cell, Direction.UPPER_LEFT, neighbour + 1)
+            }
+            table.getNeighbourValue(cell, Direction.UP) >= table.getNeighbourValue(cell, Direction.LEFT) -> {
+                table.refer(cell, Direction.UP)
+            }
+            else -> {
+                table.refer(cell, Direction.LEFT)
             }
         }
     }
 
     val res = StringBuilder()
 
-    fun print(i: Int, j: Int) {
+    fun print(cell: Cell) {
+        val direction = table.getDirection(cell)
         when {
-            i == 0 || j == 0 -> return
-            b[i][j] == Direction.UPPER_LEFT -> {
-                print(i - 1, j - 1)
-                res.append(first0[i])
+            cell.line == -1 || cell.symbol == -1 -> return
+            direction == Direction.UPPER_LEFT -> {
+                res.append(short[cell.line])
             }
-            b[i][j] == Direction.UP -> print(i - 1, j)
-            else -> print(i, j - 1)
         }
+        print(direction.getNext(cell))
     }
 
-    print(first.length, second.length)
+    print(Cell(short.length - 1, long.length - 1))
 
-    return res.toString()
+    return res.reverse().toString()
 }
 
 /**
@@ -129,7 +122,32 @@ fun longestIncreasingSubSequence(list: List<Int>): List<Int> {
  * Здесь ответ 2 + 3 + 4 + 1 + 2 = 12
  */
 fun shortestPathOnField(inputName: String): Int {
-    TODO()
+    val source = parseFile(inputName)
+    for ((cell, value) in source) {
+        val upperLeft = source.getNeighbourValue(cell, Direction.UPPER_LEFT)
+        val up = source.getNeighbourValue(cell, Direction.UP)
+        val left = source.getNeighbourValue(cell, Direction.LEFT)
+        if (!cell.isStarting()) {
+            source[cell] = minOf(upperLeft, up, left) + value
+        }
+    }
+    return source[Cell(source.height - 1, source.length - 1)]
+}
+
+fun parseFile(inputName: String): DirectionsTable<Int> {
+    File(inputName).bufferedReader().use { reader ->
+        val lines = reader.readLines()
+        val length = ceil(lines[0].length.toDouble() / 2).toInt()
+        val height = lines.size
+        File(inputName).bufferedReader().use { reader2 ->
+            val table = DirectionsTable(TableImpl(length, height, Int.MAX_VALUE))
+            for ((cell, _) in table) {
+                table[cell] = reader2.read() - '0'.toInt()
+                reader2.read()
+            }
+            return table
+        }
+    }
 }
 
 // Задачу "Максимальное независимое множество вершин в графе без циклов"
