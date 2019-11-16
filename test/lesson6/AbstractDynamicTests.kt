@@ -12,6 +12,7 @@ abstract class AbstractDynamicTests {
         assertEquals("здс", longestCommonSubSequence("здравствуй мир", "мы здесь"))
         assertEquals("emt ole", longestCommonSubSequence("nematode knowledge", "empty bottle"))
         val expectedLength = "e kerwelkkd r".length
+
         assertEquals(
             expectedLength, longestCommonSubSequence(
                 "oiweijgw kejrhwejelkrw kjhdkfjs hrk",
@@ -37,6 +38,7 @@ abstract class AbstractDynamicTests {
                 """.trimIndent()
             ).length, "Answer must have length of $expectedLength2"
         )
+
         assertEquals(
             File("input/vozmezdie_answer.txt").readText().trimIndent(),
             longestCommonSubSequence(
