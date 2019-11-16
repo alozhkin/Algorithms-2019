@@ -4,6 +4,7 @@ import lesson4.testIterator
 import lesson4.testIteratorExceptions
 import lesson4.testIteratorRemove
 import org.junit.jupiter.api.Tag
+import java.lang.StringBuilder
 import kotlin.test.*
 
 class TrieTest {
@@ -45,6 +46,19 @@ class TrieTest {
         trie.clear()
         assertEquals(0, trie.size)
         assertFalse("zyx" in trie)
+    }
+
+    @Test
+    @Tag("Example")
+    fun addTwice() {
+        val trie = Trie()
+        val sb = StringBuilder()
+        val str = "UZUMYMW"
+        sb.append("UZUMYMW")
+        assertNotSame(str, sb.toString())
+        trie.add(str)
+        trie.add(sb.toString())
+        assertEquals(1, trie.size)
     }
 
     @Test

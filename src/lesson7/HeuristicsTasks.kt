@@ -121,18 +121,14 @@ class VoyagerChoosableSet(
 
     override fun validPaths(route: Route, lastValidPaths: List<Choosable>): List<Choosable> {
         if (route.size == verticesNum) return emptyList()
-
         val lastVertex = getLastVertex(route)
         if (route.size == 1) {
             rememberFirstVertex(route, lastVertex)
         }
-
         val visitedVertices: MutableSet<Vertex> = getVisitedVerticesBesideLast(route, lastVertex)
-
         if (visitedVertices.size == verticesNum - 1) {
             return closingCycleEdge(threadLocalFirstVertex.get(), lastVertex)
         }
-
         return graph.getConnections(lastVertex).values
             .filter { it.end !in visitedVertices && it.begin !in visitedVertices }
     }

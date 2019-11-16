@@ -1,6 +1,8 @@
 package lesson5
 
 import lesson5.impl.GraphBuilder
+import org.junit.jupiter.api.assertThrows
+import java.lang.IllegalArgumentException
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -114,6 +116,69 @@ abstract class AbstractGraphTests {
         }.build()
         val loop3 = graph3.findEulerLoop()
         loop3.assert(shouldExist = false, graph = graph3)
+
+        // полный, все степени чётные
+        val graph4 = GraphBuilder().apply {
+            val verticesNum = 101
+            val vertices = mutableListOf<Graph.Vertex>()
+            for (i in 0 until verticesNum) {
+                vertices += addVertex("$i")
+            }
+            for (i in 0 until verticesNum - 1) {
+                for (j in i + 1 until verticesNum) {
+                    addConnection(vertices[i], vertices[j])
+                }
+            }
+        }.build()
+        val loop4 = graph4.findEulerLoop()
+        loop4.assert(shouldExist = true, graph = graph4)
+
+        // все компоненты связности кроме одной не содержат ребер.
+        val disconnectedButEulerian = GraphBuilder().apply {
+            val a = addVertex("A")
+            val b = addVertex("B")
+            val c = addVertex("C")
+            addVertex("D")
+            addConnection(a, b)
+            addConnection(b, c)
+            addConnection(c, a)
+        }.build()
+        val loopDisconnectedButEulerian = disconnectedButEulerian.findEulerLoop()
+        loopDisconnectedButEulerian.assert(shouldExist = true, graph = disconnectedButEulerian)
+
+        /*
+                    -------------
+                    |           |
+                    A --- B --- E
+                    | \ /   \ / |
+                    |  D --- C  F
+                    |   \   /   |
+                    ----- G -----
+         */
+        val graph5 = GraphBuilder().apply {
+            val a = addVertex("A")
+            val b = addVertex("B")
+            val c = addVertex("C")
+            val d = addVertex("D")
+            val e = addVertex("E")
+            val f = addVertex("F")
+            val g = addVertex("G")
+            addConnection(a, b)
+            addConnection(a, d)
+            addConnection(a, e)
+            addConnection(a, g)
+            addConnection(b, c)
+            addConnection(b, d)
+            addConnection(b, e)
+            addConnection(c, d)
+            addConnection(c, e)
+            addConnection(c, g)
+            addConnection(d, g)
+            addConnection(e, f)
+            addConnection(f, g)
+        }.build()
+        val loop5 = graph5.findEulerLoop()
+        loop5.assert(shouldExist = true, graph = graph5)
     }
 
     fun minimumSpanningTree(minimumSpanningTree: Graph.() -> Graph) {
@@ -174,6 +239,22 @@ abstract class AbstractGraphTests {
         val tree3 = graph3.minimumSpanningTree()
         assertEquals(4, tree3.edges.size)
         assertEquals(4, tree3.findBridges().size)
+
+        val loop = GraphBuilder().apply {
+            val a = addVertex("A")
+            val b = addVertex("B")
+            val c = addVertex("C")
+            val d = addVertex("D")
+            val e = addVertex("E")
+            addConnection(a, b)
+            addConnection(b, c)
+            addConnection(c, d)
+            addConnection(d, e)
+            addConnection(e, a)
+        }.build()
+        val loopTree = loop.minimumSpanningTree()
+        assertEquals(4, loopTree.edges.size)
+        assertEquals(4, loopTree.findBridges().size)
     }
 
     fun largestIndependentVertexSet(largestIndependentVertexSet: Graph.() -> Set<Graph.Vertex>) {
@@ -242,9 +323,36 @@ abstract class AbstractGraphTests {
             setOf(cross["A"], cross["B"], cross["C"], cross["D"]),
             cross.largestIndependentVertexSet()
         )
+        val loop = GraphBuilder().apply {
+            val a = addVertex("A")
+            val b = addVertex("B")
+            val c = addVertex("C")
+            val d = addVertex("D")
+            val e = addVertex("E")
+            addConnection(a, b)
+            addConnection(b, c)
+            addConnection(c, d)
+            addConnection(d, e)
+            addConnection(e, a)
+        }.build()
+        assertThrows<IllegalArgumentException> { loop.largestIndependentVertexSet() }
     }
 
     fun longestSimplePath(longestSimplePath: Graph.() -> Path) {
+        val tree = GraphBuilder().apply {
+            val a = addVertex("A")
+            val b = addVertex("B")
+            val c = addVertex("C")
+            val d = addVertex("D")
+            val e = addVertex("E")
+            addConnection(a, b)
+            addConnection(b, c)
+            addConnection(c, d)
+            addConnection(d, e)
+        }.build()
+        val longestTreePath = tree.longestSimplePath()
+        assertEquals(4, longestTreePath.length)
+
         val emptyGraph = GraphBuilder().build()
         assertEquals(0, emptyGraph.longestSimplePath().length)
 
@@ -327,6 +435,67 @@ abstract class AbstractGraphTests {
         }.build()
         val longestPath3 = graph3.longestSimplePath()
         assertEquals(6, longestPath3.length)
-    }
 
+        val loop = GraphBuilder().apply {
+            val a = addVertex("A")
+            val b = addVertex("B")
+            val c = addVertex("C")
+            val d = addVertex("D")
+            val e = addVertex("E")
+            addConnection(a, b)
+            addConnection(b, c)
+            addConnection(c, d)
+            addConnection(d, e)
+            addConnection(e, a)
+        }.build()
+        val longestLoopPath = loop.longestSimplePath()
+        assertEquals(4, longestLoopPath.length)
+
+        // все компоненты связности кроме одной не содержат ребер.
+        val disconnectedButEulerian = GraphBuilder().apply {
+            val a = addVertex("A")
+            val b = addVertex("B")
+            val c = addVertex("C")
+            addVertex("D")
+            addConnection(a, b)
+            addConnection(b, c)
+            addConnection(c, a)
+        }.build()
+        val longestEulerianPath = disconnectedButEulerian.longestSimplePath()
+        assertEquals(2, longestEulerianPath.length)
+
+        //2 секунды
+        val graph4 = GraphBuilder().apply {
+            val vertices = mutableListOf<Graph.Vertex>()
+            for (i in 0..17) {
+                vertices += addVertex("$i")
+            }
+            for (i in 0..16) {
+                for (j in i + 1..17) {
+                    addConnection(vertices[i], vertices[j])
+                }
+            }
+            val startingVertex = addVertex("START")
+            addConnection(vertices[8], startingVertex)
+        }.build()
+        val graph4Path = graph4.longestSimplePath()
+        assertEquals(18, graph4Path.length)
+
+        //20 секунд
+//        val tooLong = GraphBuilder().apply {
+//            val vertices = mutableListOf<Graph.Vertex>()
+//            for (i in 0..18) {
+//                vertices += addVertex("$i")
+//            }
+//            for (i in 0..17) {
+//                for (j in i + 1..18) {
+//                    addConnection(vertices[i], vertices[j])
+//                }
+//            }
+//            val startingVertex = addVertex("START")
+//            addConnection(vertices[8], startingVertex)
+//        }.build()
+//        val tooLongPath = tooLong.longestSimplePath()
+//        assertEquals(19, tooLongPath.length)
+    }
 }

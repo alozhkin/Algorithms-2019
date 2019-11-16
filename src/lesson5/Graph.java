@@ -52,5 +52,13 @@ public interface Graph {
     }
 
     @NotNull
-    Integer getVertexDegree(Vertex v);
+    Integer getVertexDegree(@NotNull Vertex v);
+
+    @NotNull
+    Set<Graph> splitOnConnectedComponents();
+
+    @NotNull
+    Graph connectedComponentOf(@NotNull Vertex v);
+
+    boolean checkIfAcyclic();
 }

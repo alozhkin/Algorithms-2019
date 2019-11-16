@@ -97,6 +97,7 @@ abstract class AbstractAlgorithmsTests {
         assertEquals(4_580, josephTask(50_000, 49_999))
         assertEquals(4_682, josephTask(50_000, 45))
         assertEquals(8372, josephTask(50_000, 12))
+        assertEquals(422037375, josephTask(451_666_013, 42))
     }
 
     fun longestCommonSubstring(longestCommonSubstring: (String, String) -> String) {

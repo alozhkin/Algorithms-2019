@@ -15,8 +15,7 @@ import kotlin.test.assertTrue
 
 abstract class AbstractHeuristicsTests {
 
-    fun fillKnapsackCompareWithGreedyTest(fillKnapsackHeuristics: (Int, List<Item>, Params) -> Fill) {
-        // a lot best items
+    fun fillKnapsackWithALotOfItems(fillKnapsackHeuristics: (Int, List<Item>, Params) -> Fill) {
         fillKnapsackCompareWithGreedyTest(
             fillKnapsackHeuristics,
             Params(600, 200, 1.0, 3.0),
@@ -25,7 +24,9 @@ abstract class AbstractHeuristicsTests {
             60,
             1000
         )
-        // two-three best items
+    }
+
+    fun fillKnapsackWithTwoThreeItems(fillKnapsackHeuristics: (Int, List<Item>, Params) -> Fill) {
         fillKnapsackCompareWithGreedyTest(
             fillKnapsackHeuristics,
             Params(2000, 50, 1.0, 1.0),
@@ -34,7 +35,9 @@ abstract class AbstractHeuristicsTests {
             600,
             1000
         )
-        // one best item
+    }
+
+    fun fillKnapsackWithOneBestItem(fillKnapsackHeuristics: (Int, List<Item>, Params) -> Fill) {
         fillKnapsackCompareWithGreedyTest(
             fillKnapsackHeuristics,
             Params(2000, 50, 1.0, 1.0),
@@ -45,6 +48,8 @@ abstract class AbstractHeuristicsTests {
         )
     }
 
+    val random = Random()
+
     private fun fillKnapsackCompareWithGreedyTest(
         fillKnapsackHeuristics: (Int, List<Item>, Params) -> Fill,
         params: Params,
@@ -53,30 +58,27 @@ abstract class AbstractHeuristicsTests {
         approximateWeight: Int,
         maxLoad: Int
     ) {
-        for (i in 0..9) {
-            val items = mutableListOf<Item>()
-            val random = Random()
-            for (j in 0 until itemsNum) {
-                items += Item(
-                    1 + random.nextInt(costBound),
-                    approximateWeight / 2 + random.nextInt(approximateWeight)
-                )
-            }
-            var nextFuncToBeDone = "Heuristics"
-            try {
-                val fillHeuristics = fillKnapsackHeuristics.invoke(maxLoad, items, params)
-                println("Heuristics score = " + fillHeuristics.cost)
-                nextFuncToBeDone = "Greedy"
-                val fillGreedy = fillKnapsackGreedy(maxLoad, items)
-                println("Greedy score = " + fillGreedy.cost)
-                nextFuncToBeDone = "Dynamic"
-                val fillDynamic = fillKnapsackDynamic(maxLoad, items)
-                println("Dynamic score = " + fillDynamic.cost)
-                assertTrue(fillHeuristics.cost >= fillGreedy.cost)
-            } catch (e: StackOverflowError) {
-                println("$nextFuncToBeDone failed with Stack Overflow")
-            }
+        val items = mutableListOf<Item>()
+        for (j in 0 until itemsNum) {
+            items += Item(
+                1 + random.nextInt(costBound),
+                approximateWeight / 2 + random.nextInt(approximateWeight)
+            )
         }
+        var nextFuncToBeDone = "Greedy"
+        try {
+            val fillHeuristics = fillKnapsackHeuristics.invoke(maxLoad, items, params)
+            println("Heuristics score = " + fillHeuristics.cost)
+            val fillGreedy = fillKnapsackGreedy(maxLoad, items)
+            println("Greedy score = " + fillGreedy.cost)
+            nextFuncToBeDone = "Dynamic"
+            val fillDynamic = fillKnapsackDynamic(maxLoad, items)
+            println("Dynamic score = " + fillDynamic.cost)
+            assertTrue(fillHeuristics.cost >= fillGreedy.cost)
+        } catch (e: StackOverflowError) {
+            println("$nextFuncToBeDone failed with Stack Overflow")
+        }
+
     }
 
     fun findVoyagingPathHeuristics(findVoyagingPathHeuristics: Graph.() -> Path) {
@@ -130,7 +132,6 @@ abstract class AbstractHeuristicsTests {
         )
         val pathExpected = graph.findVoyagingPathAnnealing(startTemperature = 3000, iterationNumber = 1000)
         println("Heuristic length ${pathActual.length}")
-        println(pathActual)
         println("Annealing length ${pathExpected.length}")
         assertTrue(pathActual < pathExpected)
 
@@ -156,10 +157,10 @@ abstract class AbstractHeuristicsTests {
         var myLoad = fillKnapsackHeuristics(capacity, items).items.fold(0.0) { prev, cur -> prev + cur.limitation }
         var optimalLoad = fillKnapsackDynamic(capacity, items).items.fold(0.0) { prev, cur -> prev + cur.limitation }
         require(myLoad <= capacity)
-        println(myLoad)
-        println(optimalLoad)
+        println("heuristic: $myLoad")
+        println("dynamic: $optimalLoad")
         println()
-        assertEquals(optimalLoad, optimalLoad)
+        assertEquals(optimalLoad, myLoad)
 
         capacity = 50
         items = listOf(
@@ -178,10 +179,10 @@ abstract class AbstractHeuristicsTests {
         myLoad = fillKnapsackHeuristics(capacity, items).items.fold(0.0) { prev, cur -> prev + cur.limitation }
         optimalLoad = fillKnapsackDynamic(capacity, items).items.fold(0.0) { prev, cur -> prev + cur.limitation }
         require(myLoad <= capacity)
-        println(myLoad)
-        println(optimalLoad)
+        println("heuristic: $myLoad")
+        println("dynamic: $optimalLoad")
         println()
-        assertEquals(optimalLoad, optimalLoad)
+        assertEquals(optimalLoad, myLoad)
 
         capacity = 50
         items = listOf(
@@ -199,9 +200,9 @@ abstract class AbstractHeuristicsTests {
         myLoad = fillKnapsackHeuristics(capacity, items).items.fold(0.0) { prev, cur -> prev + cur.limitation }
         optimalLoad = fillKnapsackDynamic(capacity, items).items.fold(0.0) { prev, cur -> prev + cur.limitation }
         require(myLoad <= capacity)
-        println(myLoad)
-        println(optimalLoad)
+        println("heuristic: $myLoad")
+        println("dynamic: $optimalLoad")
         println()
-        assertEquals(optimalLoad, optimalLoad)
+        assertEquals(optimalLoad, myLoad)
     }
 }

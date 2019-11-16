@@ -25,6 +25,15 @@ class OpenAddressingSetTest {
 
     @Test
     @Tag("Example")
+    fun addTwice() {
+        val set = OpenAddressingSet<Int>(3)
+        set.add(99999)
+        set.add(99999)
+        assertEquals(1, set.size)
+    }
+
+    @Test
+    @Tag("Example")
     fun remove() {
         val set = OpenAddressingSet<String>(3)
         assertTrue(set.isEmpty())

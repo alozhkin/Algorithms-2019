@@ -1,6 +1,5 @@
 package lesson2;
 
-import kotlin.NotImplementedError;
 import kotlin.Pair;
 import lesson1.Stopwatch;
 
@@ -185,8 +184,17 @@ public class JavaAlgorithms {
      * Общий комментарий: решение из Википедии для этой задачи принимается,
      * но приветствуется попытка решить её самостоятельно.
      */
-    static public int josephTask(int menNumber, int choiceInterval) { throw new NotImplementedError();}
-
+    static public int josephTask(int menNumber, int choiceInterval) {
+        int k = 1;
+        for (int n = 2; n < menNumber + 1; n++) {
+            k = 1 + (k + choiceInterval - 1) % n;
+        }
+        return k;
+    }
+    /*
+      память: O(1)
+      время работы: O(menNumber)
+     */
     /**
      * Наибольшая общая подстрока.
      * Средняя

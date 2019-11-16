@@ -4,6 +4,8 @@ package lesson5
 
 import lesson5.Graph.*
 import lesson5.impl.GraphBuilder
+import java.util.*
+
 
 /**
  * Эйлеров цикл.
@@ -31,44 +33,65 @@ import lesson5.impl.GraphBuilder
  * Справка: Эйлеров цикл -- это цикл, проходящий через все рёбра
  * связного графа ровно по одному разу
  */
+/*
+  Трудоёмкость: проходит один раз по каждому ребру: O(|E|)
+  Ресурсоёмкость: хранит все вершины на пути: O(|E|)
+ */
 fun Graph.findEulerLoop(): List<Edge> {
-    if (vertices.isEmpty()
-        || vertices.any { getVertexDegree(it) % 2 != 0 }
-        || edges.size < vertices.size - 1
-    ) {
-        return emptyList()
-    }
+    val visitedEdges = mutableSetOf<Edge>()
 
-    var randomVertex = vertices.random()
-    val vertexSet = mutableSetOf<Vertex>()
+    fun createCycle(vertex: Vertex): Cycle? {
+        val cycle = Cycle(vertex)
 
-    fun findAllVertexInComponent(vertex: Vertex) {
-        for (neighbour in getNeighbors(vertex)) {
-            if (neighbour !in vertexSet) {
-                vertexSet += neighbour
-                findAllVertexInComponent(neighbour)
+        fun findCycle(startingVertex: Vertex) {
+            for ((neighbourVertex, neighbourEdge) in getConnections(startingVertex)) {
+                if (neighbourEdge !in visitedEdges) {
+                    if (neighbourVertex != vertex) {
+                        cycle.add(neighbourVertex)
+                        visitedEdges += neighbourEdge
+                        findCycle(neighbourVertex)
+                        break
+                    } else {
+                        visitedEdges += neighbourEdge
+                        cycle.add(neighbourVertex)
+                        return
+                    }
+                }
             }
         }
-    }
 
-    if (vertexSet.size != vertices.size) {
-        return emptyList()
-    }
-
-    fun getAllEdgesInRightOrder(): List<Edge> {
-        val edgesSet = mutableSetOf<Edge>()
-        val edgesList = mutableListOf<Edge>()
-        while (edgesSet.size != edges.size) {
-            val connections = getConnections(randomVertex)
-            val edge = connections.values.first { it !in edgesSet }
-            edgesSet += edge
-            edgesList += edge
-            randomVertex = edge.getOtherEnd(randomVertex)
+        findCycle(vertex)
+        return if (cycle.size != 1) {
+            val cycles = mutableListOf<Cycle>()
+            for (cycleVertex in cycle) {
+                val cycle2 = createCycle(cycleVertex) ?: continue
+                cycles.add(cycle2)
+            }
+            for (loop in cycles) {
+                cycle.attach(loop)
+            }
+            cycle
+        } else {
+            null
         }
-        return edgesList
     }
 
-    return getAllEdgesInRightOrder()
+    if (edges.isEmpty()
+        || vertices.any { getVertexDegree(it) % 2 != 0 }
+        || edges.size < vertices.size - 1
+    ) return emptyList()
+
+    val randomVertex = edges.random().begin
+    val cycle = createCycle(randomVertex)!!
+
+    if (cycle.size < vertices.size) return emptyList()
+
+    val list = cycle.toList()
+    val res = mutableListOf<Edge>()
+    for (i in 1 until list.size) {
+        res.add(getConnection(list[i - 1], list[i])!!)
+    }
+    return res
 }
 
 /**
@@ -98,6 +121,10 @@ fun Graph.findEulerLoop(): List<Edge> {
  * E    F    I
  * |
  * J ------------ K
+ */
+/*
+  Трудоёмкость: обхожу все вершины O(|V|)
+  Ресурсоёмкость: обхожу все вершины O(|V|)
  */
 fun Graph.minimumSpanningTree(): Graph {
     if (vertices.isEmpty()) {
@@ -162,54 +189,19 @@ fun Graph.minimumSpanningTree(): Graph {
  *
  * Эта задача может быть зачтена за пятый и шестой урок одновременно
  */
+/*
+  Трудоёмкость: O(|V| + |E|)
+  Ресурсоёмкость: O(|V|)
+ */
 fun Graph.largestIndependentVertexSet(): Set<Vertex> {
-    val firstVertices = getFirstVerticesOfConnectedComponents(this)
+    val connectedComponents = splitOnConnectedComponents()
+    require(connectedComponents.all { it.checkIfAcyclic() })
+    val firstVertices = connectedComponents.map { it.vertices.first() }
     val result = mutableSetOf<Vertex>()
     for (first in firstVertices) {
         result += getLargestIndependentVertexSet(this, first)
     }
     return result
-}
-
-private fun getFirstVerticesOfConnectedComponents(graph: Graph): Set<Vertex> {
-    if (graph.vertices.isEmpty()) {
-        return emptySet()
-    }
-
-    fun createConnectedComponentIfCyclesAreAbsent(
-        v: Vertex,
-        verticesSet: MutableSet<Vertex>,
-        edgesSet: MutableSet<Edge>
-    ): Set<Vertex> {
-        for ((vertex, edge) in graph.getConnections(v)) {
-            if (edge !in edgesSet) {
-                if (vertex in verticesSet) {
-                    throw IllegalArgumentException()
-                } else {
-                    verticesSet += vertex
-                    edgesSet += edge
-                    createConnectedComponentIfCyclesAreAbsent(vertex, verticesSet, edgesSet)
-                }
-            }
-        }
-        return verticesSet
-    }
-
-    fun findFirstVerticesOfConnectedComponents(): Set<Vertex> {
-        val firstVertices = mutableSetOf<Vertex>()
-        val connectedComponents = mutableSetOf<Set<Vertex>>()
-        while (connectedComponents.flatten().size != graph.vertices.size) {
-            val firstVertex = graph.vertices.first { it !in connectedComponents.flatten() }
-            val verticesSet = createConnectedComponentIfCyclesAreAbsent(
-                firstVertex, mutableSetOf(), mutableSetOf()
-            )
-            connectedComponents += verticesSet + firstVertex
-            firstVertices += firstVertex
-        }
-        return firstVertices
-    }
-
-    return findFirstVerticesOfConnectedComponents()
 }
 
 private fun getLargestIndependentVertexSet(graph: Graph, firstVertex: Vertex): Set<Vertex> {
@@ -302,6 +294,35 @@ private fun getLargestIndependentVertexSet(graph: Graph, firstVertex: Vertex): S
  *
  * Ответ: A, E, J, K, D, C, H, G, B, F, I
  */
+/*
+  пусть n - длина самого длинного простого пути
+  Трудоёмкость: O(n!)
+  Ресурсоёмкость: O(n!)
+ */
 fun Graph.longestSimplePath(): Path {
-    TODO()
+    val queue = PriorityQueue<Path>(Comparator.reverseOrder())
+    var longestPath = Path()
+    var length = -1
+    for (vertex in vertices) {
+        queue.add(Path(vertex))
+    }
+    while (!queue.isEmpty()) {
+        val path = queue.poll()
+        if (path.length > length) {
+            longestPath = path
+            length = path.length
+            if (path.vertices.size == vertices.size) {
+                break
+            }
+        }
+        for (neighbour in getNeighbors(path.vertices.last())) {
+            if (neighbour !in path) {
+                queue.add(Path(path, this, neighbour))
+            }
+        }
+    }
+    return longestPath
 }
+
+
+

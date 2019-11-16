@@ -1,9 +1,10 @@
 package lesson1;
 
-import kotlin.NotImplementedError;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 public class JavaTasks {
@@ -37,9 +38,111 @@ public class JavaTasks {
      *
      * В случае обнаружения неверного формата файла бросить любое исключение.
      */
-    static public void sortTimes(String inputName, String outputName) {
-        throw new NotImplementedError();
+    private static class Time implements Comparable<Time> {
+
+        private enum Meridiem {
+            AM,
+            PM;
+
+            Meridiem of(String str) {
+                if (str.toLowerCase().equals("am")) {
+                    return AM;
+                } else if (str.toLowerCase().equals("pm")) {
+                    return PM;
+                } throw new IllegalArgumentException("There is no Meridiem " + str);
+            }
+        }
+
+        private static final Comparator<Time> comparator =
+                Comparator.comparing(Time::getMeridiem).thenComparing(it -> it.hours % 12)
+                        .thenComparing(Time::getMinutes).thenComparing(Time::getSeconds);
+
+        int hours;
+        int minutes;
+        int seconds;
+        Meridiem meridiem;
+
+        Time(String time) {
+            String[] strings = time.split(" ");
+            String[] numbers = strings[0].split(":");
+            hours = Integer.parseInt(numbers[0]);
+            minutes = Integer.parseInt(numbers[1]);
+            seconds = Integer.parseInt(numbers[2]);
+            meridiem = Meridiem.valueOf(strings[1]);
+        }
+
+        int getHours() {
+            return hours;
+        }
+
+        int getMinutes() {
+            return minutes;
+        }
+
+        int getSeconds() {
+            return seconds;
+        }
+
+        Meridiem getMeridiem() {
+            return meridiem;
+        }
+
+        @Override
+        public int compareTo(@NotNull Time o) {
+            return comparator.compare(this, o);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Time time = (Time) o;
+            return hours == time.hours &&
+                    minutes == time.minutes &&
+                    seconds == time.seconds &&
+                    meridiem == time.meridiem;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(hours, minutes, seconds, meridiem);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%02d:%02d:%02d %s", hours, minutes, seconds, meridiem);
+        }
     }
+
+
+    public static void sortTimes(String inputName, String outputName) throws IOException {
+        List<Time> times = parseTimes(inputName);
+        Collections.sort(times);
+        writeInFileTimes(times, outputName);
+    }
+
+    private static List<Time> parseTimes(String inputName) throws IOException {
+        List<Time> times = new ArrayList<>();
+        try (BufferedReader input = new BufferedReader(new FileReader(new File(inputName)))) {
+            for (String line = input.readLine(); line != null; line = input.readLine()) {
+                times.add(new Time(line));
+            }
+        }
+        return times;
+    }
+
+    private static void writeInFileTimes(List<Time> times, String outputName) throws IOException {
+        try (BufferedWriter output = new BufferedWriter(new FileWriter(new File(outputName)))) {
+            for (Time time : times) {
+                output.write(time.toString());
+                output.newLine();
+            }
+        }
+    }
+    /*
+      память: O(n) на хранение времени
+      время работы: O(n*log(n)) на сортировку листа
+     */
 
     /**
      * Сортировка адресов
@@ -67,10 +170,155 @@ public class JavaTasks {
      *
      * В случае обнаружения неверного формата файла бросить любое исключение.
      */
-    static public void sortAddresses(String inputName, String outputName) {
-        throw new NotImplementedError();
+    private static class Address implements Comparable<Address> {
+        private static final Comparator<Address> comparator =
+                Comparator.comparing(Address::getStreetName).thenComparing(Address::getNumber);
+        private final String streetName;
+        private final int number;
+
+        private Address(String streetName, int number) {
+            this.streetName = streetName;
+            this.number = number;
+        }
+
+        String getStreetName() {
+            return streetName;
+        }
+
+        int getNumber() {
+            return number;
+        }
+
+        @Override
+        public int compareTo(@NotNull Address o) {
+            return comparator.compare(this, o);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Address address = (Address) o;
+            return number == address.number &&
+                    Objects.equals(streetName, address.streetName);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(streetName, number);
+        }
+
+        @Override
+        public String toString() {
+            return streetName + " " + number;
+        }
     }
 
+
+    private static class House {
+        private final SortedSet<Citizen> residents = new TreeSet<>();
+
+        void addResident(Citizen citizen) {
+            residents.add(citizen);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            House house = (House) o;
+            return residents.equals(house.residents);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(residents);
+        }
+
+        @Override
+        public String toString() {
+            return residents.stream().map(Citizen::toString).collect(Collectors.joining(", "));
+        }
+    }
+
+
+    private static class Citizen implements Comparable<Citizen> {
+        private static final Comparator<Citizen> comparator =
+                Comparator.comparing(Citizen::getLastName).thenComparing(Citizen::getName);
+        private final String name;
+        private final String lastName;
+
+        Citizen(String lastName, String name) {
+            this.name = name;
+            this.lastName = lastName;
+        }
+
+        String getName() {
+            return name;
+        }
+
+        String getLastName() {
+            return lastName;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Citizen citizen = (Citizen) o;
+            return Objects.equals(name, citizen.name) &&
+                    Objects.equals(lastName, citizen.lastName);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, lastName);
+        }
+
+        @Override
+        public String toString() {
+            return lastName + " " + name;
+        }
+
+        @Override
+        public int compareTo(@NotNull Citizen o) {
+            return comparator.compare(this, o);
+        }
+    }
+
+
+    public static void sortAddresses(String inputName, String outputName) throws IOException {
+        Map<Address, House> houses = parseHouses(inputName);
+        writeInFileSortedHouses(houses, outputName);
+    }
+
+    private static Map<Address, House> parseHouses(String inputName) throws IOException {
+        Map<Address, House> houses = new HashMap<>();
+        try (BufferedReader input = new BufferedReader(new FileReader(new File(inputName)))) {
+            for (String line = input.readLine(); line != null; line = input.readLine()) {
+                String[] splittedLine = line.split(" ");
+                Citizen citizen = new Citizen(splittedLine[0], splittedLine[1]);
+                Address address = new Address(splittedLine[3], Integer.parseInt(splittedLine[4]));
+                houses.putIfAbsent(address, new House());
+                houses.get(address).addResident(citizen);
+            }
+        }
+        return houses;
+    }
+
+    private static void writeInFileSortedHouses(Map<Address, House> houses, String outputName) throws IOException {
+        SortedSet<Address> sortedAddresses = new TreeSet<>(houses.keySet());
+        try (BufferedWriter output = new BufferedWriter(new FileWriter(new File(outputName)))) {
+            for (Address address: sortedAddresses) {
+                output.write(address.toString() + " - " + houses.get(address).toString());
+                output.newLine();
+            }
+        }
+    }
+    /*
+      память: O(n) на хранение адресов и жителей
+      время работы: O(n*log(n)) n раз вставляем в TreeSet (красно-чёрное дерево) за log(n), сортируем адреса за n*log(n)
+     */
     /**
      * Сортировка температур
      *
@@ -289,6 +537,22 @@ public class JavaTasks {
      * Результат: second = [1 3 4 9 9 13 15 20 23 28]
      */
     static <T extends Comparable<T>> void mergeArrays(T[] first, T[] second) {
-        throw new NotImplementedError();
+        int firstIndex = 0;
+        int secondIndex = first.length;
+        for (int i = 0; i < second.length; i++) {
+            if (secondIndex == second.length
+                    || (firstIndex < first.length && first[firstIndex].compareTo(second[secondIndex]) <= 0))
+            {
+                second[i] = first[firstIndex];
+                firstIndex++;
+            } else {
+                second[i] = second[secondIndex];
+                secondIndex++;
+            }
+        }
     }
+    /*
+      память: O(n) на хранение массивов
+      время работы: O(n) обходим второй массив
+     */
 }

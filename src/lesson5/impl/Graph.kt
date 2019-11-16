@@ -53,6 +53,10 @@ class GraphBuilder {
         connections[end] = connections[end]?.let { it + edge } ?: setOf(edge)
     }
 
+    fun addConnection(edge: Edge) {
+        addConnection(edge.begin, edge.end, edge.weight)
+    }
+
     fun build(): Graph = object : Graph {
 
         override fun get(name: String): Vertex? = this@GraphBuilder.vertices[name]
@@ -74,6 +78,63 @@ class GraphBuilder {
 
         override fun getVertexDegree(v: Vertex): Int {
             return connections[v]?.size ?: 0
+        }
+
+        override fun splitOnConnectedComponents(): Set<Graph> {
+            val connectedComponents = mutableSetOf<Graph>()
+            var allVertices = listOf<Vertex>()
+            while (allVertices.size != this.vertices.size) {
+                val firstVertex = this.vertices.first { it !in allVertices }
+                val connectedComponent = connectedComponentOf(firstVertex)
+                connectedComponents += connectedComponent
+                allVertices = connectedComponents.flatMap { it.vertices }
+            }
+            return connectedComponents
+        }
+
+        override fun connectedComponentOf(firstVertex: Vertex): Graph {
+            val verticesSet = mutableSetOf<Vertex>()
+            val edgesSet = mutableSetOf<Edge>()
+
+            fun findConnectedComponent(v: Vertex) {
+                verticesSet.add(v)
+                for ((vertex, edge) in this.getConnections(v)) {
+                    if (edge !in edgesSet) {
+                        verticesSet += vertex
+                        edgesSet += edge
+                        findConnectedComponent(vertex)
+                    }
+                }
+            }
+
+            findConnectedComponent(firstVertex)
+            return GraphBuilder().apply {
+                for (v in verticesSet) {
+                    addVertex(v)
+                }
+                for (e in edgesSet) {
+                    addConnection(e)
+                }
+            }.build()
+        }
+
+        override fun checkIfAcyclic(): Boolean {
+            val visitedVertices = mutableSetOf<Vertex>()
+            val visitedEdges = mutableSetOf<Edge>()
+
+            fun dfs(v: Vertex): Boolean {
+                if (v in visitedVertices) return false
+                visitedVertices += v
+                for ((neighbourVertex, neighbourEdge) in getConnections(v)) {
+                    if (neighbourEdge !in visitedEdges) {
+                        visitedEdges += neighbourEdge
+                        if (!dfs(neighbourVertex)) return false
+                    }
+                }
+                return true
+            }
+
+            return dfs(vertices.first())
         }
     }
 }

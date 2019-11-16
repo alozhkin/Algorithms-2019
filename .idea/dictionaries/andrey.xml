@@ -3,7 +3,11 @@
     <words>
       <w>choosable</w>
       <w>coeff</w>
+      <w>eulerian</w>
       <w>koenigsberg</w>
+      <w>meridiem</w>
+      <w>splitted</w>
+      <w>warshall</w>
     </words>
   </dictionary>
 </component>

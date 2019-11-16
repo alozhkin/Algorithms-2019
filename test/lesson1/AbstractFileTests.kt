@@ -1,14 +1,6 @@
 package lesson1
 
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileReader
-import java.io.InputStream
-import java.security.DigestInputStream
-import java.security.MessageDigest
-import java.util.*
-import java.util.zip.CRC32
-import kotlin.math.max
 import kotlin.test.assertEquals
 
 abstract class AbstractFileTests {

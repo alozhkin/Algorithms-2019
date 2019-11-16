@@ -10,6 +10,15 @@ import java.util.NoSuchElementException;
 import java.util.SortedSet;
 
 public class BinaryTreeJavaTest {
+
+    @Test
+    public void addTwice() {
+        BinaryTree<Integer> tree = new BinaryTree<>();
+        tree.add(99999);
+        tree.add(99999);
+        Assertions.assertEquals(1, tree.size);
+    }
+
     @Test
     public void removeTest() {
         BinaryTree<Integer> tree = new BinaryTree<>();

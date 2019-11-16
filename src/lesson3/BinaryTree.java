@@ -127,7 +127,7 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
     Сложность: O(lgn)
      */
 
-    private boolean removeNode(Node node) {
+    private boolean removeNode(Node<T> node) {
         if (node == null) return false;
         if (node.left == null) {
             transplant(node, node.right);
@@ -244,6 +244,7 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
         }
         return node;
     }
+
     private Node<T> findNext(Node<T> x) {
         if (root == null) return null;
         if (x == null) return root.minimum();
@@ -271,6 +272,7 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
         }
         return y;
     }
+
     public class BinaryTreeIterator implements Iterator<T> {
 
         private Node<T> current;
@@ -406,7 +408,6 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
             this.fromStart = fromStart;
             this.toEnd = toEnd;
         }
-
 
         @Override
         public boolean contains(Object o) {

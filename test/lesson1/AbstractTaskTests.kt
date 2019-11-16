@@ -15,6 +15,22 @@ abstract class AbstractTaskTests : AbstractFileTests() {
 
     protected fun sortTimes(sortTimes: (String, String) -> Unit) {
         try {
+            sortTimes("input/my_times.txt", "temp.txt")
+            assertFileContent(
+                "temp.txt",
+                """
+                    12:01:01 AM
+                    02:02:02 AM
+                    03:03:03 AM
+                    03:03:03 AM
+                    12:01:01 PM
+                    02:02:02 PM
+                """.trimIndent()
+            )
+        } finally {
+            File("temp.txt").delete()
+        }
+        try {
             sortTimes("input/time_in1.txt", "temp.txt")
             assertFileContent(
                 "temp.txt",
@@ -50,6 +66,18 @@ abstract class AbstractTaskTests : AbstractFileTests() {
     }
 
     protected fun sortAddresses(sortAddresses: (String, String) -> Unit) {
+        try {
+            sortAddresses("input/my_addresses.txt", "temp.txt")
+            assertFileContent(
+                "temp.txt",
+                """
+                    ЛьваТолстого 16 - Бунина Елена, Волож Аркадий, Худавердян Тигран
+                    Приморский 70 - Бреслав Андрей, Елизаров Роман, Жемеров Дмитрий, Исакова Светлана, Харири Хади
+                """.trimIndent()
+            )
+        } finally {
+            File("temp.txt").delete()
+        }
         try {
             sortAddresses("input/addr_in1.txt", "temp.txt")
             assertFileContent(
@@ -389,9 +417,13 @@ abstract class AbstractTaskTests : AbstractFileTests() {
     }
 
     protected fun mergeArrays(mergeArrays: (Array<Int>, Array<Int?>) -> Unit) {
-        val result = arrayOf(null, null, null, null, null, 1, 3, 9, 13, 18, 23)
+        var result = arrayOf(null, null, null, null, null, 1, 3, 9, 13, 18, 23)
         mergeArrays(arrayOf(4, 9, 15, 20, 23), result)
         assertArrayEquals(arrayOf(1, 3, 4, 9, 9, 13, 15, 18, 20, 23, 23), result)
+
+        result = arrayOf(null, null, null, null, null, 3, 11, 21, 341, 683, 1365, 2731, 5461)
+        mergeArrays(arrayOf(1, 5, 43, 85, 171), result)
+        assertArrayEquals(arrayOf(1, 3, 5, 11, 21, 43, 85, 171, 341, 683, 1365, 2731, 5461), result)
 
         fun testGeneratedArrays(
             firstSize: Int,

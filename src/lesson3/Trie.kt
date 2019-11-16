@@ -139,9 +139,7 @@ class Trie : AbstractMutableSet<String>(), MutableSet<String> {
           Трудоёмкость: O(1)
         */
         override fun remove() {
-            if (currentNode == null) {
-                throw IllegalStateException()
-            }
+            checkNotNull(currentNode)
             if (expectedModCount != modCount) {
                 throw ConcurrentModificationException()
             }

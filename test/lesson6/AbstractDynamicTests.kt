@@ -1,9 +1,11 @@
 package lesson6
 
+import java.io.File
 import kotlin.test.assertEquals
 
 abstract class AbstractDynamicTests {
     fun longestCommonSubSequence(longestCommonSubSequence: (String, String) -> String) {
+        assertEquals("", lesson6.longestCommonSubSequence("", ""))
         assertEquals("", longestCommonSubSequence("мой мир", "я"))
         assertEquals("1", longestCommonSubSequence("1", "1"))
         assertEquals("13", longestCommonSubSequence("123", "13"))
@@ -35,6 +37,13 @@ abstract class AbstractDynamicTests {
                 """.trimIndent()
             ).length, "Answer must have length of $expectedLength2"
         )
+        assertEquals(
+            File("input/vozmezdie_answer.txt").readText().trimIndent(),
+            longestCommonSubSequence(
+                File("input/vozmezdie_1.txt").readText(),
+                File("input/vozmezdie_2.txt").readText()
+            ).trim()
+        )
     }
 
     fun longestIncreasingSubSequence(longestIncreasingSubSequence: (List<Int>) -> List<Int>) {
@@ -55,6 +64,36 @@ abstract class AbstractDynamicTests {
                 )
             )
         )
+        assertEquals(
+            listOf(3, 5, 7, 9), lesson6.longestIncreasingSubSequence(
+                listOf(3, 2, 5, 4, 7, 6, 9, 8)
+            )
+        )
+        assertEquals(
+            listOf(2, 5, 7, 9), lesson6.longestIncreasingSubSequence(
+                listOf(9, 2, 5, 4, 7, 6, 9, 8)
+            )
+        )
+        assertEquals(
+            listOf(-1), longestIncreasingSubSequence(
+                listOf(-1, -2, -3)
+            )
+        )
+        assertEquals(
+            listOf(-1, 1), longestIncreasingSubSequence(
+                listOf(-1, 1, -2, -3)
+            )
+        )
+        assertEquals(
+            listOf(-1, 1, 2), longestIncreasingSubSequence(
+                listOf(-1, 1, -2, 2, -3)
+            )
+        )
+        assertEquals(
+            listOf(-2, -1), longestIncreasingSubSequence(
+                listOf(-2, -1)
+            )
+        )
     }
 
     fun shortestPathOnField(shortestPathOnField: (String) -> Int) {
@@ -64,6 +103,7 @@ abstract class AbstractDynamicTests {
         assertEquals(28, shortestPathOnField("input/field_in4.txt"))
         assertEquals(222, shortestPathOnField("input/field_in5.txt"))
         assertEquals(15, shortestPathOnField("input/field_in6.txt"))
+        assertEquals(0, shortestPathOnField("input/my_field.txt"))
     }
 
 }

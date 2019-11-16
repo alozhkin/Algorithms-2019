@@ -1,13 +1,13 @@
 package lesson4
 
 class OpenAddressingSet<T : Any>(private val bits: Int) : AbstractMutableSet<T>() {
+    private companion object DeletedObject
+
     init {
         require(bits in 2..31)
     }
 
     private var modCount = 0
-
-    private val deletedObject = 42
 
     private val capacity = 1 shl bits
 
@@ -36,7 +36,7 @@ class OpenAddressingSet<T : Any>(private val bits: Int) : AbstractMutableSet<T>(
         val startingIndex = element.startingIndex()
         var index = startingIndex
         var current = storage[index]
-        while (current != null && current != deletedObject) {
+        while (current != null && current != DeletedObject) {
             if (current == element) {
                 return false
             }
@@ -76,7 +76,7 @@ class OpenAddressingSet<T : Any>(private val bits: Int) : AbstractMutableSet<T>(
     }
 
     private fun removeAt(index: Int) {
-        storage[index] = deletedObject
+        storage[index] = DeletedObject
         size--
         modCount++
     }
@@ -93,7 +93,7 @@ class OpenAddressingSet<T : Any>(private val bits: Int) : AbstractMutableSet<T>(
         private var expectedModCount = modCount
         private var nextIndex = -1
         private var nowIndex = -1
-        private var now: T? = null
+        private var lastTimeRemoveWasCalled = false
         private var next: T? = findNext()
 
         /*
@@ -111,9 +111,10 @@ class OpenAddressingSet<T : Any>(private val bits: Int) : AbstractMutableSet<T>(
         override fun next(): T {
             if (expectedModCount != modCount) throw ConcurrentModificationException()
             if (next == null) throw NoSuchElementException()
-            now = next
+            val now = next
             nowIndex = nextIndex
             next = findNext()
+            lastTimeRemoveWasCalled = false
             return now!!
         }
 
@@ -128,7 +129,7 @@ class OpenAddressingSet<T : Any>(private val bits: Int) : AbstractMutableSet<T>(
                         return null
                     }
                     current = storage[nextIndex]
-                } while (current == null || current == deletedObject)
+                } while (current == null || current == DeletedObject)
                 return current as T?
             }
         }
@@ -139,10 +140,10 @@ class OpenAddressingSet<T : Any>(private val bits: Int) : AbstractMutableSet<T>(
         */
         override fun remove() {
             if (expectedModCount != modCount) throw ConcurrentModificationException()
-            if (now == null) throw IllegalStateException()
+            check(!lastTimeRemoveWasCalled)
             removeAt(nowIndex)
             expectedModCount = modCount
-            now = null
+            lastTimeRemoveWasCalled = true
         }
     }
 }

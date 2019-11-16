@@ -1,20 +1,38 @@
 package lesson7
 
+import lesson7.annotations.ReRun
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestTemplate
+
 
 class HeuristicsTestsKotlin : AbstractHeuristicsTests() {
+
     @Test
     @Tag("Impossible")
     fun testFillKnapsack() {
         fillKnapsack()
     }
 
-    // этот тест занимает примерно 2 минуты
-    @Test
     @Tag("Impossible")
-    fun testFillKnapsackCompareWithGreedyTest() {
-        fillKnapsackCompareWithGreedyTest { load, items, params -> fillKnapsackHeuristics(load, items, params) }
+    @ReRun(10, 90)
+    @TestTemplate
+    fun testFillKnapsackWithALotOfItems() {
+        fillKnapsackWithALotOfItems { load, items, params -> fillKnapsackHeuristics(load, items, params) }
+    }
+
+    @Tag("Impossible")
+    @ReRun(10, 90)
+    @TestTemplate
+    fun testFillKnapsackWithTooThreeItems() {
+        fillKnapsackWithTwoThreeItems { load, items, params -> fillKnapsackHeuristics(load, items, params) }
+    }
+
+    @Tag("Impossible")
+    @ReRun(10, 90)
+    @TestTemplate
+    fun testFillKnapsackWithOneBestItem() {
+        fillKnapsackWithOneBestItem { load, items, params -> fillKnapsackHeuristics(load, items, params) }
     }
 
     @Test
