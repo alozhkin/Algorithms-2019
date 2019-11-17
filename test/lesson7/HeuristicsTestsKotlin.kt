@@ -15,7 +15,7 @@ class HeuristicsTestsKotlin : AbstractHeuristicsTests() {
     }
 
     @Tag("Impossible")
-    @ReRun(10, 90)
+    @ReRun(5, 80)
     @TestTemplate
     fun testFillKnapsackWithALotOfItems() {
         fillKnapsackWithALotOfItems { load, items, params -> fillKnapsackHeuristics(load, items, params) }

@@ -19,7 +19,7 @@ abstract class AbstractHeuristicsTests {
         fillKnapsackCompareWithGreedyTest(
             fillKnapsackHeuristics,
             Params(600, 200, 1.0, 3.0),
-            200,
+            100,
             500,
             60,
             1000
