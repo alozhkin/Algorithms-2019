@@ -1,8 +1,9 @@
 package lesson6
 
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import kotlin.test.Test
-
+@Disabled
 class DynamicTestsJava : AbstractDynamicTests() {
 
     @Test
